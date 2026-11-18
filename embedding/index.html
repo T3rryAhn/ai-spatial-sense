@@ -1,0 +1,1124 @@
+<title>AI의 지능은 공간감각이다</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f7f5f0; --paper:#fffdf8; --ink:#1c1b19; --muted:#6d695f; --line:#e2ddd2; --grid:#e9e4d9;
+  --fam:#0f8a7e; --obj:#4f55c9; --query:#e0603c; --doc:#b97c0c; --good:#2c8f4a; --bad:#d0453a;
+  --hl:rgba(240,180,67,.38);
+  --sans:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121417; --paper:#1a1d21; --ink:#ecebe7; --muted:#9b978e; --line:#2d3137; --grid:#23272c;
+  --fam:#3cc4b4; --obj:#8e93f2; --query:#ff8a63; --doc:#f0b443; --good:#4fc274; --bad:#ff6b5e;
+  --hl:rgba(240,180,67,.25); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#121417; --paper:#1a1d21; --ink:#ecebe7; --muted:#9b978e; --line:#2d3137; --grid:#23272c;
+  --fam:#3cc4b4; --obj:#8e93f2; --query:#ff8a63; --doc:#f0b443; --good:#4fc274; --bad:#ff6b5e;
+  --hl:rgba(240,180,67,.25); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased;word-break:keep-all}
+button{font:inherit;color:inherit;cursor:pointer}
+.mono{font-family:var(--mono)}
+
+.app{height:100dvh;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;position:relative;
+  padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left))}
+
+/* 상단 진행 표시 */
+.top{display:flex;align-items:flex-start;gap:20px;padding:16px 0 0;position:relative;z-index:2}
+.brand{font-weight:700;font-size:14px;letter-spacing:-.01em;white-space:nowrap;padding-top:1px}
+.chapters{flex:1;display:flex;gap:6px;min-width:0}
+.chap{flex:var(--n) 1 0;min-width:0;background:none;border:0;padding:0;text-align:left}
+.chap .bar{display:block;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.chap .fill{display:block;height:100%;background:var(--ink);width:0;transition:width .5s cubic-bezier(.2,.7,.2,1)}
+.chap .lab{display:block;font-size:11px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .3s}
+.chap.cur .lab{color:var(--ink);font-weight:600}
+
+/* 본문: 왼쪽 문장, 오른쪽 무대 */
+.main{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:center;gap:clamp(16px,4vw,64px);
+  padding:0 clamp(0px,3vw,48px);min-height:0;position:relative;z-index:1}
+.copy{max-width:560px;transition:opacity .18s,transform .18s}
+.copy.out{opacity:0;transform:translateY(-10px)}
+.kicker{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.04em;margin:0 0 14px}
+.head{font-size:clamp(25px,3.1vw,42px);line-height:1.32;font-weight:700;letter-spacing:-.02em;margin:0}
+.head em{font-style:normal;background:linear-gradient(transparent 58%,var(--hl) 58%)}
+.sub{font-size:clamp(15px,1.35vw,18px);line-height:1.65;color:var(--muted);margin:18px 0 0}
+.act{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.act:empty{display:none}
+.w{display:inline-block;opacity:0;transform:translateY(16px);animation:wIn .6s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:calc(var(--i)*55ms)}
+.late{opacity:0;animation:fadeUp .55s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:calc(var(--n)*55ms + 250ms)}
+@keyframes wIn{to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.main.solo{grid-template-columns:1fr;justify-items:center;overflow-y:auto;padding-top:12px;padding-bottom:12px}
+.main.solo .stage{display:none}
+.main.solo .copy{text-align:center;max-width:860px}
+.main.solo .head{font-size:clamp(32px,5.2vw,64px)}
+.main.solo .act{justify-content:center}
+
+.stage{position:relative;height:100%;min-height:0;display:grid;place-items:center}
+#map{width:100%;height:100%;max-height:100%;display:block;transition:opacity .4s}
+.panel{position:absolute;inset:0;display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .35s;overflow:auto;padding:8px 0}
+.panel.show{opacity:1;pointer-events:auto}
+.hud{position:absolute;left:0;bottom:6px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px;line-height:1.7;opacity:0;transition:opacity .3s;pointer-events:none;max-width:calc(100% - 8px)}
+.hud.show{opacity:1}
+.toast{position:absolute;top:4%;left:50%;transform:translate(-50%,8px);background:var(--paper);border:1px solid var(--line);border-radius:999px;
+  padding:8px 16px;font-size:15px;opacity:0;transition:opacity .25s,transform .25s;white-space:nowrap;pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* 하단 내비게이션 */
+.nav{display:flex;align-items:center;gap:12px;padding:12px 0 max(16px,env(safe-area-inset-bottom));position:relative;z-index:2}
+.nav .hint{flex:1;text-align:center;font-size:12px;color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--paper);border-radius:999px;height:44px;padding:0 20px;font-weight:600;font-size:15px;transition:transform .15s,opacity .2s,background .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn:disabled{opacity:.35;cursor:default;transform:none}
+.btn.round{width:44px;padding:0}
+.btn.next{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.next.wait{background:var(--paper);color:var(--muted);border-color:var(--line)}
+.count{font-family:var(--mono);font-size:12px;color:var(--muted);min-width:52px;text-align:right}
+
+.cta{border:0;background:var(--ink);color:var(--bg);border-radius:999px;height:52px;padding:0 28px;font-weight:700;font-size:17px;transition:transform .15s}
+.cta:hover{transform:translateY(-2px)}
+.cta:active{transform:scale(.97)}
+.cta.pulse{animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ink) 35%,transparent)}50%{box-shadow:0 0 0 10px transparent}}
+.tiny{font-size:13px;color:var(--muted);flex-basis:100%;margin:6px 0 0}
+.cnt{font-family:var(--mono);color:var(--muted);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{--c:var(--ink);border:1.5px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 16px;font-weight:600;font-size:15px;transition:all .2s}
+.chip.fam{--c:var(--fam)} .chip.obj{--c:var(--obj)}
+.chip.on{background:var(--c);border-color:var(--c);color:var(--bg)}
+.qchip{display:inline-block;background:color-mix(in srgb,var(--query) 12%,var(--paper));border:1.5px solid var(--query);color:var(--ink);border-radius:14px;padding:10px 16px;font-weight:600;font-size:16px}
+.hint2{font-size:15px;font-weight:600;color:var(--muted);animation:nudge 2.4s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:none}50%{transform:translateX(4px)}}
+.slider{display:inline-flex;align-items:center;gap:12px;font-weight:600}
+.slider input{width:min(240px,50vw);accent-color:var(--ink)}
+.chip.qc{--c:var(--query);text-align:left}
+.qmsg{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 16px;font-size:16px;line-height:1.55;animation:fadeUp .4s}
+.qmsg .hk{margin-top:4px}
+.vread{font-family:var(--mono);font-size:13px;color:var(--muted);min-height:1.5em}
+.link.att{stroke:var(--query);stroke-dasharray:none;stroke-width:3;opacity:.7}
+.mat{line-height:1.5;margin:4px 0;white-space:pre}
+/* 다이어그램 패널 */
+.diag{width:min(100%,640px);height:auto;overflow:visible}
+.dt{font-size:15px;fill:var(--ink);font-weight:500} .dt.b{font-weight:700;font-size:18px} .dt.m{fill:var(--muted);font-size:13px} .dt.s{font-size:14px;font-weight:600} .dt.red{fill:var(--bad);font-weight:700}
+.dbox{fill:var(--paper);stroke:var(--line)} .drule{fill:color-mix(in srgb,var(--doc) 22%,var(--paper));stroke:var(--doc);stroke-width:2}
+.darr{stroke:var(--muted);stroke-width:1.6;stroke-dasharray:180;stroke-dashoffset:180;animation:draw .6s forwards;animation-delay:calc(var(--k)*120ms + 200ms)}
+@keyframes draw{to{stroke-dashoffset:0}}
+.edge{stroke:var(--line);stroke-width:1}
+.eflow{stroke-width:2;stroke-dasharray:10 300;stroke-dashoffset:0;opacity:.9;animation:flow 1.8s linear infinite}
+@keyframes flow{from{stroke-dashoffset:0}to{stroke-dashoffset:-310}}
+.node{opacity:0;animation:fadeUp .4s forwards;animation-delay:calc(var(--k)*250ms)}
+.wgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;width:100%;font-family:var(--mono);font-size:12px;text-align:center}
+.wgrid span{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:5px 0;color:var(--muted)}
+.wgrid span.flash{animation:flash .9s}
+@keyframes flash{0%{background:var(--hl);color:var(--ink);border-color:var(--doc)}}
+.pcount{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font-size:13px;color:var(--muted)}
+.pcount span{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+.pcount b{color:var(--ink);margin-right:4px}
+.stack{position:relative;display:grid;gap:8px;width:min(100%,420px);padding-left:28px}
+.layer{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--obj);border-radius:10px;padding:10px 14px;display:flex;gap:12px;align-items:baseline;opacity:0;animation:fadeUp .4s forwards;animation-delay:calc((6 - var(--k))*150ms)}
+.layer span{font-size:13px;color:var(--muted)} .layer.dots{border:0;background:none;justify-content:center;color:var(--muted);padding:0}
+.sin,.sout{font-size:14px;text-align:center;font-family:var(--mono)} .sin{color:var(--query)} .sout{color:var(--fam);font-family:var(--sans);font-weight:600}
+.token{position:absolute;left:6px;bottom:8px;width:14px;height:14px;border-radius:50%;background:var(--query);animation:rise 3.2s cubic-bezier(.5,0,.5,1) infinite 1s}
+@keyframes rise{0%{transform:translateY(0);opacity:0}10%{opacity:1}85%{opacity:1;background:var(--fam)}100%{transform:translateY(calc(-1 * var(--h,300px)));opacity:0;background:var(--fam)}}
+.mm{display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:20px}
+.mbr{display:grid;gap:6px;border-left:2px solid var(--ink);border-right:2px solid var(--ink);padding:6px 10px;border-radius:6px}
+.mr{display:grid;grid-template-columns:repeat(3,3.2em);text-align:center;border-radius:6px;animation:hlrow 3.6s infinite;animation-delay:calc(var(--k)*1.2s)}
+.mbr.col span{display:block;text-align:center;min-width:3em;padding:0 0}
+.mbr.res span{animation:hlrow 3.6s infinite;animation-delay:calc(var(--k)*1.2s);border-radius:6px}
+@keyframes hlrow{0%,33%{background:var(--hl)}34%,100%{background:transparent}}
+.op{color:var(--muted)}
+.mf{margin-top:16px;font-family:var(--mono);font-size:14px;color:var(--muted);display:grid;gap:4px;text-align:center}
+.mf div{animation:hltext 3.6s infinite;animation-delay:calc(var(--k)*1.2s)}
+@keyframes hltext{0%,33%{color:var(--ink)}34%,100%{color:var(--muted)}}
+.rwrap{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;width:100%}
+.rcol{display:grid;gap:8px;justify-items:center;width:min(100%,250px)}
+.rh2{font-weight:600;font-size:14px;text-align:center} .rh2 small{color:var(--muted);font-weight:400}
+.race{display:grid;grid-template-columns:repeat(16,1fr);gap:2px;width:100%;aspect-ratio:1}
+.race i{background:var(--grid);border-radius:2px;transition:background .15s}
+.race i.on{background:var(--fam)}
+#rc i.on{background:var(--obj)}
+.rt{font-family:var(--mono);font-size:14px}
+.vr{display:grid;gap:12px;width:min(100%,520px)}
+.vbox{background:var(--paper);border:1.5px solid var(--fam);border-radius:14px;padding:12px}
+.vbox.ram{border-color:var(--line)} .vbox.ram.over{border-color:var(--bad)}
+.vh{font-size:13px;font-weight:600;margin-bottom:8px}
+.slots{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;min-height:24px}
+.slots i{aspect-ratio:2/1;border-radius:4px}
+.slots .empty{border:1px dashed var(--line)}
+.slots .blk{background:var(--fam);animation:pop .3s backwards;animation-delay:calc(var(--d)*1ms)}
+.slots .blk.bad{background:var(--bad)}
+.more{font-family:var(--mono);font-size:13px;color:var(--bad);align-self:center}
+.vres{font-size:15px;line-height:1.5} .vres.ok{color:var(--good)} .vres.no{color:var(--bad)} .vres b{color:var(--ink)}
+.vnote{font-size:12px;color:var(--muted);margin:0}
+.vctl{display:grid;gap:6px}
+.chips.sm .chip{padding:6px 12px;font-size:14px}
+.kctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;flex-basis:100%}
+.cowr{display:grid;gap:14px;width:min(100%,460px);justify-items:center}
+.cowr .card{width:100%}
+.rl{padding:6px 0;border-bottom:1px solid var(--line);opacity:0;animation:fadeUp .4s forwards;animation-delay:calc(var(--k)*250ms + 500ms)}
+.exs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.ex{background:color-mix(in srgb,var(--bad) 12%,var(--paper));border:1px solid var(--bad);color:var(--bad);border-radius:999px;padding:6px 14px;font-weight:600;font-size:14px;opacity:0;animation:popin .4s forwards;animation-delay:calc(var(--k)*350ms + 1.8s)}
+@keyframes popin{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+.rline{stroke:var(--obj);opacity:.45;stroke-dasharray:300;stroke-dashoffset:300;animation:draw .7s forwards;animation-delay:calc(var(--k)*150ms + 200ms)}
+.rnode{opacity:0;animation:fadeUp .4s forwards;animation-delay:calc(var(--k)*150ms + 500ms)}
+.switch{display:inline-flex;align-items:center;gap:10px;font-weight:600;cursor:pointer;user-select:none}
+.switch input{width:20px;height:20px;accent-color:var(--doc)}
+
+/* 무대 SVG */
+svg text{font-family:var(--sans)}
+.lab{font-size:16px;font-weight:600;fill:var(--ink)}
+.halo{paint-order:stroke;stroke:var(--bg);stroke-width:6px;stroke-linejoin:round}
+.axis{stroke:var(--muted);stroke-width:1.3}
+.ring0{fill:none;stroke:var(--grid);stroke-width:1.3}
+.axl{font-family:var(--mono);font-size:13px;fill:var(--muted)}
+.pt.fam{color:var(--fam)} .pt.obj{color:var(--obj)} .pt.doc{color:var(--doc)} .pt.query{color:var(--query)}
+.pt.query .lab{fill:var(--query)}
+.pt .dot{fill:currentColor}
+.pt .ring{fill:none;stroke:currentColor;stroke-width:2.5}
+.pt .ring.bad{stroke:var(--bad);stroke-dasharray:4 4}
+.crd{font-family:var(--mono);font-size:12.5px;fill:var(--muted)}
+.pt .grab{fill:currentColor;opacity:.14;animation:breathe 1.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes breathe{50%{transform:scale(1.35);opacity:.06}}
+#map.interactive{touch-action:none;cursor:grab}
+#map.interactive.tap{cursor:crosshair}
+#map.dragging{cursor:grabbing}
+.ray{stroke-width:2.6;stroke-linecap:round}
+.ray.fam{stroke:var(--fam)} .ray.obj{stroke:var(--obj)} .ray.doc{stroke:var(--doc)} .ray.query{stroke:var(--query)}
+.link{stroke-width:2.6;stroke-dasharray:7 7}
+.link.bad{stroke:var(--bad)} .link.good{stroke:var(--good)}
+.linkl{font-size:15px;font-weight:700}
+.linkl.bad{fill:var(--bad)} .linkl.good{fill:var(--good)}
+.arc{fill:none;stroke:var(--ink);stroke-width:2}
+.arcl{font-family:var(--mono);font-size:14px;fill:var(--ink);font-weight:500}
+
+/* HUD 내용 */
+.lrow{display:flex;gap:10px;align-items:baseline}
+.lrow b{min-width:3em}
+.lrow.fam b{color:var(--fam)} .lrow.obj b{color:var(--obj)}
+.lrow .arr{color:var(--muted)}
+.hk{color:var(--muted);font-size:12px}
+.ok{color:var(--good);font-weight:600}
+.rank{min-width:260px}
+.rh{font-size:12px;color:var(--muted);margin-bottom:4px}
+.rr{display:grid;grid-template-columns:9em 1fr 3.4em;gap:10px;align-items:center;font-size:14px;line-height:1.3;padding:4px 0}
+.rr b .ck{color:var(--doc);margin-right:4px}
+.rr .rb{height:6px;background:var(--grid);border-radius:3px;overflow:hidden}
+.rr .rb i{display:block;height:100%;background:var(--muted);border-radius:3px;transition:width .4s}
+.rr.top .rb i{background:var(--doc)} .rr.topw .rb i{background:var(--ink)}
+.rr.top b,.rr.topw b{font-weight:700}
+.rr.miss{color:var(--bad)} .rr.miss .rb i{background:var(--bad)}
+.rr .mono{text-align:right}
+.rr b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 패널 내용 */
+.cards{display:grid;gap:12px;width:min(100%,520px)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px 20px;opacity:0;animation:fadeUp .5s forwards;animation-delay:calc(var(--k)*420ms + 200ms)}
+.card h3{margin:0 0 4px;font-size:18px}
+.card h3 small{font-family:var(--mono);font-weight:400;font-size:12px;color:var(--muted);margin-left:8px}
+.card p{margin:0;color:var(--muted);line-height:1.6;font-size:15px}
+.card .ai{color:var(--ink);font-weight:600}
+.note{font-size:13px;color:var(--muted);text-align:center;margin:4px 0 0;opacity:0;animation:fadeUp .5s forwards;animation-delay:1.6s}
+.vwrap{display:grid;gap:10px;justify-items:center;width:min(100%,520px)}
+.vg{display:grid;grid-template-columns:repeat(32,1fr);gap:1.5px;width:100%;aspect-ratio:32/24}
+.vg i{background:var(--fam);opacity:var(--a);border-radius:1px;animation:pop .35s backwards;animation-delay:calc(var(--d)*1ms)}
+.vg i.n{background:var(--obj)}
+@keyframes pop{from{transform:scale(0)}}
+.vcap{font-size:15px;color:var(--muted)} .vcap b{color:var(--ink)}
+.v3{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;width:100%}
+.v3 .vwrap{width:min(100%,210px)}
+.v3 .vwrap:nth-child(2){animation:fadeUp .5s backwards .5s} .v3 .vwrap:nth-child(3){animation:fadeUp .5s backwards 1s}
+.sim{font-family:var(--mono);font-size:14px}
+.sim.hi{color:var(--good);font-weight:600} .sim.lo{color:var(--bad);font-weight:600}
+.chain{display:flex;align-items:center;gap:clamp(8px,2vw,18px);flex-wrap:wrap;justify-content:center}
+.cbox{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px 20px;text-align:center;opacity:0;animation:fadeUp .5s forwards;animation-delay:calc(var(--k)*600ms + 200ms);min-width:120px}
+.cbox .big{font-size:26px;font-weight:700}
+.cbox .cap{font-size:13px;color:var(--muted);margin-top:6px}
+.carr{font-size:24px;color:var(--muted);opacity:0;animation:fadeUp .4s forwards;animation-delay:calc(var(--k)*600ms + 100ms)}
+.prompt{width:min(100%,520px);display:grid;gap:8px}
+.pl{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:10px 14px;font-size:14px;line-height:1.55;opacity:0;animation:fadeUp .45s forwards;animation-delay:calc(var(--k)*280ms + 150ms)}
+.pl.sys{border-left-color:var(--muted)} .pl.doc{border-left-color:var(--doc)} .pl.q{border-left-color:var(--query)}
+.pl b{font-family:var(--mono);font-size:12px;margin-right:6px}
+.flow{display:flex;align-items:center;gap:12px;justify-content:center;margin-top:6px;opacity:0;animation:fadeUp .5s forwards;animation-delay:1.8s}
+.llm{background:var(--ink);color:var(--bg);font-weight:700;border-radius:12px;padding:10px 16px}
+.ans{background:color-mix(in srgb,var(--good) 12%,var(--paper));border:1px solid var(--good);border-radius:12px;padding:10px 14px;font-size:14px;max-width:300px;line-height:1.5}
+.rag{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:min(100%,600px)}
+.rag .card{text-align:center;padding:22px 14px}
+.rag .L{font-size:44px;font-weight:700;line-height:1;margin-bottom:10px}
+.rag .card:nth-child(1) .L{color:var(--doc)} .rag .card:nth-child(2) .L{color:var(--query)} .rag .card:nth-child(3) .L{color:var(--fam)}
+.rag .en{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:8px}
+
+/* 마무리 */
+.recap{list-style:none;padding:0;margin:8px auto 0;display:grid;gap:12px;text-align:left;max-width:640px;flex-basis:100%}
+.recap li{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px 20px;font-size:17px;line-height:1.55;opacity:0;animation:fadeUp .5s forwards;animation-delay:calc(var(--k)*450ms + 500ms)}
+.recap b{display:inline-block;min-width:5.2em}
+.credit{flex-basis:100%;font-size:12px;color:var(--muted);line-height:1.6;margin:10px 0 0}
+
+/* 시작·끝 화면 배경의 떠다니는 점 */
+.dust{position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .8s;z-index:0}
+.dust.show{opacity:1}
+.dust span{position:absolute;width:var(--s);height:var(--s);border-radius:50%;background:var(--c);opacity:.22;animation:drift var(--t) ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(var(--dx),var(--dy))}}
+
+/* 목차 */
+.tocs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;flex-basis:100%;max-width:820px;margin:8px auto 0;text-align:left}
+.toc{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:10px;align-content:start;opacity:0;animation:fadeUp .5s forwards;animation-delay:calc(var(--k)*200ms + 400ms)}
+.toc h3{margin:0;font-size:22px;letter-spacing:-.01em}
+.tk{font-family:var(--mono);font-size:12px;color:var(--muted)} .ts{color:var(--muted);font-size:14px}
+.tch{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}
+.tch button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 12px;font-size:14px}
+.tch button:hover{border-color:var(--ink)} .tch .mono{color:var(--muted);font-size:11px;margin-right:2px}
+.toc .cta{justify-self:start;height:44px;font-size:15px;padding:0 20px}
+/* 칭찬 학습 기록 */
+.claprow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.claplog{list-style:none;padding:0;margin:4px 0 0;display:grid;gap:6px;flex-basis:100%;max-width:520px}
+.claplog li{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--good);border-radius:10px;padding:8px 12px;font-size:14px;line-height:1.6;animation:fadeUp .35s}
+.claplog .hk{display:inline;margin-right:4px}
+.rq{font-size:13px;font-weight:600;color:var(--query);margin-bottom:2px}
+/* 질문 배너 · 용어표 · 펼쳐보기 */
+.qbar{position:absolute;top:0;left:50%;transform:translate(-50%,-6px);max-width:calc(100% - 8px);background:color-mix(in srgb,var(--query) 14%,var(--paper));border:1.5px solid var(--query);border-radius:14px;padding:9px 16px;font-size:16px;font-weight:600;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:3;text-align:center}
+.qbar.show{opacity:1;transform:translate(-50%,0)}
+.qbar .qk{font-size:12px;color:var(--query);margin-right:8px;font-weight:700}
+.terms{display:grid;gap:8px;width:min(100%,560px)}
+.terms .th{display:grid;grid-template-columns:1fr 1fr;padding:0 16px 0 16px;font-size:12px;color:var(--muted);gap:44px}
+.tr{display:grid;grid-template-columns:1fr 24px 1fr;gap:10px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:15px;opacity:0;animation:fadeUp .45s forwards;animation-delay:calc(var(--k)*300ms + 200ms)}
+.tr .arr{color:var(--muted);text-align:center}
+.tr b{color:var(--fam);display:block} .tr small{color:var(--muted);font-size:12.5px}
+.more{flex-basis:100%;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14.5px;line-height:1.65;max-width:560px}
+.more summary{cursor:pointer;font-weight:600;font-family:var(--sans);color:var(--ink);font-size:14.5px}
+.more p{margin:8px 0 0;color:var(--muted)} .more b{color:var(--ink)}
+.explain{flex-basis:100%;max-width:560px;font-size:15px;line-height:1.7;color:var(--muted);background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--obj);border-radius:10px;padding:10px 14px;animation:fadeUp .4s}
+.explain b{color:var(--ink)}
+@media (max-width:860px){
+  .top{gap:12px;padding-top:12px}
+  .brand{display:none}
+  .chap .lab{font-size:10px}
+  .main{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);align-items:start;gap:10px;padding:14px 0 0}
+  .copy{max-width:none}
+  .head{font-size:clamp(21px,5.6vw,28px)}
+  .sub{margin-top:10px;font-size:14px}
+  .act{margin-top:14px}
+  .main.solo{align-items:center;grid-template-rows:1fr}
+  .hud{font-size:12px;padding:8px 10px;line-height:1.6}
+  .rank{min-width:210px}
+  .rr{font-size:12px;grid-template-columns:6.5em 1fr 3em}
+  .nav .hint{visibility:hidden}
+  .rag{grid-template-columns:1fr}
+  .tocs{grid-template-columns:1fr}
+  .toc{padding:16px}
+  .rag .card{padding:12px;display:flex;gap:14px;align-items:center;text-align:left}
+  .rag .L{font-size:30px;margin:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .w,.late,.card,.cbox,.carr,.pl,.flow,.recap li,.note,.layer,.rnode,.ex,.rl,.node,.qmsg,.toc,.claplog li,.tr,.explain{animation:none!important;opacity:1;transform:none}
+  .darr,.rline{animation:none!important;stroke-dashoffset:0}
+  .slots .blk,.token,.mr,.mbr.res span,.mf div{animation:none!important}
+  .vg i,.v3 .vwrap,.dust span{animation:none!important}
+}
+</style>
+
+<div class="app">
+  <div class="dust" id="dust"></div>
+  <header class="top">
+    <div class="brand">AI의 지능은 공간감각이다</div>
+    <nav class="chapters" id="chapters" aria-label="챕터"></nav>
+  </header>
+  <main class="main" id="main">
+    <section class="copy" id="copy" aria-live="polite">
+      <p class="kicker" id="kicker"></p>
+      <h1 class="head" id="head"></h1>
+      <p class="sub" id="sub"></p>
+      <div class="act" id="act"></div>
+    </section>
+    <section class="stage" id="stage">
+      <svg id="map" viewBox="-110 -10 820 620" role="img" aria-label="의미 공간 그림"></svg>
+      <div class="panel" id="panel"></div>
+      <div class="hud" id="hud"></div>
+      <div class="toast" id="toast"></div>
+      <div class="qbar" id="qbar"></div>
+    </section>
+  </main>
+  <footer class="nav">
+    <button class="btn round" id="prev" aria-label="이전">←</button>
+    <div class="hint" id="hint">→ 키 · 스페이스로 넘기기</div>
+    <span class="count" id="count"></span>
+    <button class="btn next" id="next">다음 →</button>
+  </footer>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const C = 300, R = 230;
+const P = (x, y) => [C + x * R, C - y * R];
+const polar = (deg, r) => [Math.cos(deg * Math.PI / 180) * r, Math.sin(deg * Math.PI / 180) * r];
+const rot = ([x, y], deg) => { const a = deg * Math.PI / 180; return [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)]; };
+const lerp2 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+const cosSim = (a, b) => { let d = 0, na = 0, nb = 0; for (let i = 0; i < a.length; i++) { d += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; } return d / Math.sqrt(na * nb); };
+const f2 = v => (v < -0.005 ? '−' : '') + Math.abs(v).toFixed(2);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- 등장인물 ---------- */
+const W = {
+  mom: { label: '엄마', g: 'fam', start: [-0.62, -0.34], tgt: polar(78, 0.82), z: 0.35 },
+  dad: { label: '아빠', g: 'fam', start: [0.72, -0.58], tgt: polar(42, 0.8), z: 0.25 },
+  fam: { label: '가족', g: 'fam', start: [-0.2, 0.62], tgt: polar(60, 1.0), z: 0.45 },
+  car: { label: '자동차', g: 'obj', start: [-0.76, 0.36], tgt: polar(-58, 0.82), z: -0.3 },
+  toy: { label: '장난감', g: 'obj', start: [0.08, -0.86], tgt: polar(-14, 0.8), z: -0.1 },
+  obj: { label: '사물', g: 'obj', start: [0.84, 0.3], tgt: polar(-36, 1.0), z: -0.4 },
+};
+const FAM = ['mom', 'dad', 'fam'], OBJ = ['car', 'toy', 'obj'], WORDS = [...FAM, ...OBJ];
+const D = {
+  d1: { label: '타임아웃 설정', g: 'doc', tgt: polar(18, 0.9) },
+  d2: { label: '재처리 절차', g: 'doc', tgt: polar(40, 0.92) },
+  d3: { label: '오류 로그 보는 법', g: 'doc', tgt: polar(63, 0.88) },
+  d4: { label: 'E-4012 인증서 만료', g: 'doc', tgt: polar(108, 0.9), kw: 'E-4012' },
+  d5: { label: '인터페이스 등록', g: 'doc', tgt: polar(140, 0.86) },
+  d6: { label: '배치 스케줄', g: 'doc', tgt: polar(168, 0.9) },
+  d7: { label: '사내 식당 메뉴', g: 'doc', tgt: polar(-72, 0.88) },
+  q1: { label: '질문', g: 'query', tgt: polar(30, 0.62), lab: [13, 5, 'start'] },
+  q2: { label: '질문', g: 'query', tgt: polar(52, 0.62), lab: [13, 5, 'start'] },
+  q3: { label: '질문', g: 'query', tgt: polar(-55, 0.62), lab: [13, 5, 'start'] },
+};
+const DOCS = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7'];
+const QTEXT = { q1: '전송이 자꾸 시간 초과로 끊겨요', q2: 'E-4012 오류가 떠요', q3: '오늘 점심 뭐 나와요?' };
+const EXTRA = { baby: { label: '아기', g: 'fam', tgt: polar(68, 0.74) }, guess: { label: '내 답', g: 'query', lab: [-14, 5, 'end'] } };
+/* 신경망 장면: 직선 하나로 못 가르는 점들 (초록 = 양쪽 끝, 보라 = 가운데) */
+const NN = (() => { const r = rng(5), xa = [-0.95, -0.85, -0.72, -0.6, 0.6, 0.72, 0.85, 0.95], xb = [-0.26, -0.18, -0.1, -0.03, 0.04, 0.12, 0.2, 0.27];
+  return [...xa.map(x => ({ x, y: (r() - 0.5) * 1.6, g: 'fam' })), ...xb.map(x => ({ x, y: (r() - 0.5) * 1.6, g: 'obj' }))]; })();
+const CTX = {
+  a: { text: '반 1등을 두고 친구와 경쟁했다', to: ['sch', 'stu'], at: polar(132, 0.72) },
+  b: { text: '결승전에서 상대 팀과 경쟁했다', to: ['spo', 'soc'], at: polar(32, 0.72) },
+};
+const W3 = ['mom', 'dad', 'fam', 'grandma', 'car', 'toy', 'obj', 'doll', 'ball', 'bus', 'bike', 'dog', 'cat'];
+const ENT = {
+  me: { label: '나', emoji: '🧍' }, lion: { label: '사자', emoji: '🦁' }, deer: { label: '사슴', emoji: '🦌' }, babyE: { label: '우리 = 아기', emoji: '👶' },
+  ...W, ...D, ...EXTRA,
+  ...Object.fromEntries(NN.map((p, i) => ['n' + i, { label: '', g: p.g }])),
+  sch: { label: '학교', g: 'fam', tgt: polar(140, 0.88) }, stu: { label: '공부', g: 'fam', tgt: polar(165, 0.82) },
+  spo: { label: '스포츠', g: 'obj', tgt: polar(22, 0.88) }, soc: { label: '축구', g: 'obj', tgt: polar(-2, 0.82) },
+  cmp: { label: '경쟁', g: 'query', tgt: polar(88, 0.5) },
+  grandma: { label: '할머니', g: 'fam', tgt: [0.3, 0.68], z: 0.85 }, doll: { label: '인형', g: 'obj', tgt: [0.6, 0.2], z: 0.55 },
+  ball: { label: '공', g: 'obj', tgt: [0.92, -0.42], z: -0.35 }, bus: { label: '버스', g: 'obj', tgt: [0.15, -0.9], z: -0.6 },
+  bike: { label: '자전거', g: 'obj', tgt: [0.5, -0.88], z: 0.15 }, dog: { label: '강아지', g: 'doc', tgt: [-0.6, 0.35], z: 0.6 },
+  cat: { label: '고양이', g: 'doc', tgt: [-0.75, 0.1], z: 0.3 },
+};
+
+/* ---------- 상태 ---------- */
+let learnT = 0, objT = 0, base = 'fam', hybrid = true;
+let over = {}, yaw = 0, pitch = 0.35, spin = true, ragQ = 'q1', guess = null, nnStep = 0, ctx = null, topK = 3;
+const vm = { p: 7, bits: 16, gpu: 24 };
+const at = (id, d) => over[id] || d;   // 사용자가 끌어다 놓은 위치가 있으면 그걸 씀
+const clampR = (p, m = 1.1) => { const r = Math.hypot(...p); return r > m ? [p[0] * m / r, p[1] * m / r] : p; };
+const cs = {}, ts = {};           // 현재값 · 목표값 (모두 숫자, 부드럽게 따라감)
+const lineDefs = {}; let arcDef = null;
+let idx = 0, beat = null, t0 = 0, timers = [];
+
+/* ---------- 768차원 예시 벡터 (가짜, 고정 시드) ---------- */
+function rng(seed) { return () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const gauss = r => (r() + r() + r() - 1.5) / 1.5;
+const clamp1 = v => Math.max(-1, Math.min(1, v));
+const vMom = (() => { const r = rng(7); return Array.from({ length: 768 }, () => clamp1(gauss(r))); })();
+const vDad = (() => { const r = rng(11); return vMom.map(v => clamp1(v * 0.82 + gauss(r) * 0.5)); })();
+const vCar = (() => { const r = rng(23); return Array.from({ length: 768 }, () => clamp1(gauss(r))); })();
+const grid = v => `<div class="vg">${v.map((x, i) => `<i data-i="${i + 1}" data-v="${f2(x)}" class="${x >= 0 ? 'p' : 'n'}" style="--a:${(0.15 + 0.85 * Math.abs(x)).toFixed(2)};--d:${(i % 32) * 14 + Math.floor(i / 32) * 10}"></i>`).join('')}</div>`;
+
+/* ---------- 장면 도우미 ---------- */
+const pts = (ids, pos, extra = {}) => Object.fromEntries(ids.map(id => [id, { at: typeof pos === 'function' ? pos(id) : (pos === 'start' ? ENT[id].start : ENT[id].tgt), ...(extra[id] || {}) }]));
+const CLAPS = [
+  { heard: '“엄마, 아빠는 우리 <b>가족</b>이야.”', try: '“엄마… 가족?”' },
+  { heard: '“<b>가족</b> 사진 찍자, 엄마 아빠!”', try: '“아빠도 가족!”' },
+  { heard: '“엄마도 아빠도 <b>가족</b>이지?”', try: '“엄마 아빠 가족!”' },
+];
+const famDist = () => Math.hypot(cs['mom.x'] - cs['fam.x'], cs['mom.y'] - cs['fam.y']) || 0;
+const learned = id => FAM.includes(id) ? lerp2(W[id].start, W[id].tgt, learnT) : lerp2(W[id].start, W[id].tgt, objT);
+function ledger(ids) {
+  const rows = ids.filter(id => (cs[id + '.op'] || 0) > 0.05).map(id =>
+    `<div class="lrow ${W[id].g}"><b>${W[id].label}</b><span class="arr">→</span><span class="mono">(${f2(cs[id + '.x'])}, ${f2(cs[id + '.y'])})</span></div>`).join('');
+  return `<div class="hk">말 → 좌표(숫자)</div>${rows}`;
+}
+const wp = id => at(id, W[id].tgt);
+const topWord = b => WORDS.filter(id => id !== b).sort((x, y) => cosSim(wp(b), wp(y)) - cosSim(wp(b), wp(x)))[0];
+function rankWords(b) {
+  const rows = WORDS.filter(id => id !== b).map(id => ({ id, c: cosSim(wp(b), wp(id)) })).sort((x, y) => y.c - x.c);
+  return `<div class="rank"><div class="rh">‘${W[b].label}’과(와)의 코사인 유사도</div>${rows.map((r, i) =>
+    `<div class="rr ${i === 0 ? 'topw' : ''}"><b>${W[r.id].label}</b><span class="rb"><i style="width:${Math.max(0, r.c) * 100}%"></i></span><span class="mono">${f2(r.c)}</span></div>`).join('')}</div>`;
+}
+function docRank(q, useKw) {
+  const qp = at(q, D[q].tgt);
+  return DOCS.map(id => { const c = cosSim(qp, D[id].tgt); const kw = useKw && q === 'q2' && D[id].kw ? 0.5 : 0; return { id, c, kw, s: c + kw }; }).sort((a, b) => b.s - a.s);
+}
+function rankDocs(q, useKw, missId, n = 3) {
+  const rows = docRank(q, useKw).slice(0, Math.max(5, n + 1));
+  return `<div class="rank"><div class="rq">질문 “${QTEXT[q] || ''}”${over[q] ? ' <span class="hk">(옮긴 위치)</span>' : ''}</div><div class="rh">${useKw ? '의미 점수 + 키워드 가산점' : '질문과의 코사인 유사도'} · 상위 ${n}개 선택</div>${rows.map((r, i) =>
+    `<div class="rr ${i < n ? 'top' : ''} ${r.id === missId ? 'miss' : ''}"><b>${i < n ? '<span class="ck">●</span>' : ''}${D[r.id].label}</b><span class="rb"><i style="width:${Math.min(1, Math.max(0, r.s / 1.5 * (useKw ? 1 : 1.5))) * 100}%"></i></span><span class="mono">${r.s.toFixed(2)}</span></div>`).join('')}</div>`;
+}
+const topIds = (q, k, n = 3) => docRank(q, k).slice(0, n).map(r => r.id);
+
+/* ---------- 장면 목록: 한 장면에 한 생각 ---------- */
+const CH = [{ t: '목차', p: 0 }, { t: '시작', p: 1 }, { t: '거리', p: 1 }, { t: '관계', p: 1 }, { t: '학습', p: 1 }, { t: '유사도', p: 1 }, { t: '차원', p: 1 }, { t: '검색', p: 1 }, { t: '마무리', p: 1 },
+  { t: '시작', p: 2 }, { t: '신경망', p: 2 }, { t: 'GPU', p: 2 }, { t: '마무리', p: 2 }];
+const PARTS = { 1: ['1편', '말은 어떻게 숫자가 될까', '임베딩 · 유사도 · RAG', '약 10분'], 2: ['2편', '그 숫자는 어떻게 계산될까', '신경망 · 어텐션 · GPU · VRAM', '약 6분'] };
+const DEF1 = '지능이란, 상대적인 *위치* 감각입니다.';
+const DEF2 = '신경망이란, 공간을 여러 번 *바꿔* 관계를 드러내는 계산입니다.';
+const tocCard = p => { const [no, title, sub, time] = PARTS[p];
+  return `<div class="toc" style="--k:${p - 1}"><div class="tk">${no} · ${time}</div><h3>${title}</h3><div class="ts">${sub}</div>
+    <div class="tch">${CH.map((c, i) => [c, i]).filter(([c]) => c.p === p && c.t !== '시작' && c.t !== '마무리').map(([c, i], n) => `<button data-jump="${i}"><span class="mono">${String(n + 1).padStart(2, '0')}</span> ${c.t}</button>`).join('')}</div>
+    <button class="cta" data-jump="${CH.findIndex(c => c.p === p)}">${no} 시작 →</button></div>`; };
+const BEATS = [
+  { ch: 0, solo: true, kicker: 'AI 기초 학습 · 목차', head: 'AI의 지능은 *공간감각*이다', sub: 'AI가 말을 이해하는 방식을, 한 장면씩 넘기며 직접 만져봅니다.',
+    act: () => `<div class="tocs">${tocCard(1)}${tocCard(2)}</div><p class="tiny">← → 키, 스페이스, 또는 아래 버튼으로 넘겨요</p>` },
+
+  // 1편 시작: 정의로 열고
+  { ch: 1, solo: true, kicker: '1편 · 말은 어떻게 숫자가 될까', head: DEF1, sub: '멀고 가까움을 아는 감각. 이 한 문장이, AI가 말의 뜻을 알아내는 방식까지 이어집니다.',
+    act: () => `<button class="cta pulse" data-go>시작하기 →</button>` },
+
+  // 거리
+  { ch: 2, head: '먼 옛날, 초원 위의 *나*.', scene: () => ({ pts: { me: { at: [0.05, -0.2] } } }) },
+  { ch: 2, head: '사자가 *가까우면*, 도망칩니다.',
+    scene: () => ({ pts: { me: { at: [0.05, -0.2] }, lion: { at: [-0.5, 0.12] } }, lines: { ml: { a: 'me', b: 'lion', cls: 'bad', label: '가깝다!' } } }) },
+  { ch: 2, head: '사슴이 *가까우면*, 다가갑니다.',
+    scene: () => ({ pts: { me: { at: [0.05, -0.2] }, lion: { at: [-0.95, 0.72], op: 0.3 }, deer: { at: [0.55, 0.1] } }, lines: { md: { a: 'me', b: 'deer', cls: 'good', label: '잡을 수 있다' } } }) },
+  { ch: 2, head: '멀고 가까움을 아는 감각. 그게 *지능*의 시작이었습니다.', sub: '“생각은 상대적인 위치 감각에서 출발한다.” — 문병로 교수 강연에서',
+    scene: () => ({ pts: { me: { at: [0.05, -0.2] }, lion: { at: [-0.95, 0.72] }, deer: { at: [0.55, 0.1] } },
+      lines: { ml2: { a: 'me', b: 'lion', cls: 'bad', label: '멀다 → 안전' }, md: { a: 'me', b: 'deer', cls: 'good', label: '가깝다 → 기회' } } }) },
+
+  // 규칙 vs 관계
+  { ch: 3, head: '옛날엔 *지능*을 사람이 규칙으로 적었습니다.', sub: '기호주의: 지능 = 기호를 다루고, 규칙과 논리를 적용하는 것. 사람이 직접 프로그래밍합니다. 그런데 예외가 끝없이 생깁니다.', map: false,
+    panel: () => cowRule() },
+  { ch: 3, head: '지금의 지능은 *연결*에서 스스로 생겨납니다.', sub: '연결주의(신경망): 지능은 뉴런들의 연결망에서 스스로 창발(발생)하는 것. ‘소’의 뜻 = ‘소’와 이어진 말들과의 관계.', map: false,
+    panel: () => cowRel() },
+  { ch: 3, head: '중요한 건 정의가 아니라 *관계*입니다.', sub: '“아예 노골적으로 관계에 집착해보자”가 지금의 AI. 이 관계를 ‘거리’로 바꾸는 게 다음 이야기입니다.', map: false,
+    panel: () => `<div class="chain">
+      <div class="cbox" style="--k:0"><div class="big">규칙</div><div class="cap">사람이 정의를 적는다<br>예외에 약하다</div></div>
+      <span class="carr" style="--k:1">→</span>
+      <div class="cbox" style="--k:1"><div class="big" style="color:var(--fam)">관계</div><div class="cap">데이터에서 스스로 찾는다<br>예외도 관계로 흡수</div></div></div>` },
+
+  // 학습
+  { ch: 4, head: 'AI도 같습니다. 다만 사자 대신, 말과 말 사이의 *거리*를 봅니다.',
+    scene: () => ({ axes: 1, pts: pts(WORDS, 'tgt', Object.fromEntries(WORDS.map(id => [id, { op: 0.45 }]))) }) },
+  { ch: 4, head: '그럼 이런 *지능*은 어떻게 생길까요?', sub: '처음부터 따라가 봅시다.',
+    scene: () => ({ axes: 1, pts: pts(WORDS, 'tgt', Object.fromEntries(WORDS.map(id => [id, { op: 0.2 }]))) }) },
+  { ch: 4, head: '우리가 말을 처음 배우는 *아기*라고 상상해 볼게요.', sub: '아직 아무 말도 모릅니다. 들리는 소리만 있을 뿐.',
+    scene: () => ({ pts: { babyE: { at: [0, -0.05] } } }), draw: t => babble(t) },
+  { ch: 4, head: '아기의 머릿속을 *평면* 하나라고 해볼게요.', sub: '가로 x, 세로 y. 아직 아무것도 없습니다.', scene: () => ({ axes: 1 }) },
+  { ch: 4, head: '‘엄마’라는 말을 처음 듣습니다.', sub: '머릿속 어딘가에 점 하나가 찍힙니다.', coords: true,
+    scene: () => ({ axes: 1, pts: pts(['mom'], 'start', { mom: { hl: 1 } }) }), hud: () => ledger(['mom']) },
+  { ch: 4, head: '말이 *숫자*가 됐습니다.', sub: '점의 자리 = 좌표 = 숫자 두 개. 점을 끌어서 옮기면 숫자도 바뀝니다.', coords: true, drag: ['mom'],
+    scene: () => ({ axes: 1, pts: { mom: { at: at('mom', W.mom.start), hl: 1 } } }), hud: () => ledger(['mom']),
+    act: () => `<span class="hint2">👆 ‘엄마’ 점을 끌어보세요</span>` },
+  { ch: 4, head: '‘아빠’, ‘가족’도 들어옵니다. 자리는 *아무* 데나.', sub: '처음엔 어떤 말이 어떤 말과 가까운지 모릅니다.', coords: true,
+    scene: () => ({ axes: 1, pts: pts(FAM, 'start') }), hud: () => ledger(FAM) },
+  { ch: 4, head: '말해보고, *칭찬*받으면, 그 말들이 가까워집니다.', sub: '아기는 혼자 배우지 않습니다. 주변에서 듣고 → 따라 말해보고 → 칭찬(보상)을 받으면 그 연결이 강해집니다. 칭찬 버튼을 세 번 눌러보세요.', coords: true,
+    gate: () => learnT > 0.99,
+    scene: () => ({ axes: 1, pts: pts(FAM, learned), lines: learnT > 0 ? { lf: { a: 'mom', b: 'fam', cls: 'good', label: d => `엄마–가족 거리 ${d.toFixed(2)}` } } : {} }), hud: () => ledger(FAM),
+    act: () => `<div class="claprow">${learnT > 0.99 ? `<button class="cta" disabled>✓ 배웠어요</button>` : `<button class="cta pulse" data-clap>👏 칭찬하기</button>`}
+      <span class="cnt" id="clapCnt">${Math.round(learnT * 3)} / 3</span>${learnT > 0 ? `<button class="btn" data-clapreset>↺ 처음부터</button>` : ''}</div>
+      <ol class="claplog">${CLAPS.slice(0, Math.round(learnT * 3)).map((c, i) => `<li><span class="hk">들은 말</span> ${c.heard}<br><span class="hk">아기</span> ${c.try} <span class="hk">→ 엄마</span> <b>“맞아!” 👏</b> <span class="ok">연결 강화</span></li>`).join('')}</ol>` },
+  { ch: 4, head: '이게 *학습*입니다.', sub: '시도 → 칭찬(보상) → 숫자를 조금 고침 → 반복. AI는 이걸 수십억 문장으로 합니다. 칭찬 대신 ‘정답과 얼마나 다른가(오차)’를 신호로 삼아서요.', coords: true,
+    scene: () => ({ axes: 1, pts: pts(FAM, 'tgt') }), hud: () => ledger(FAM) },
+  { ch: 4, head: '아기 이야기를 실제 *AI* 학습 용어로 바꾸면', map: false,
+    act: () => `<details class="more"><summary>임베딩 모델은 실제로 어떻게 배울까?</summary>
+      <p>임베딩 모델은 실제로 “같은 뜻의 문장 쌍은 당기고, 관계없는 문장은 밀어내는” 방식(<b>대조 학습</b>)으로 많이 학습합니다. 아기 비유와 꽤 비슷합니다.</p>
+      <p>다만 앞의 칭찬 장면은 이해를 돕기 위해 아주 단순하게 흉내 낸 것입니다.</p></details>`,
+    panel: () => `<div class="terms">
+      <div class="th"><span>아기 이야기</span><span>실제 AI 학습</span></div>
+      ${[['처음엔 아무 데나 놓임', '무작위 초기화', ''],
+        ['세상의 말을 엄청나게 많이 들음', '사전학습', '대량의 글로 학습'],
+        ['부모님이 칭찬하고 바로잡아 줌', '사후학습', '사람의 피드백으로 다듬기'],
+        ['회사에 와서 우리 팀 용어를 새로 익힘', '파인튜닝', '특정 분야에 맞춰 추가 학습'],
+        ['칭찬 / 꾸중', '오차 줄이기', '정답과의 차이를 줄이는 방향으로 좌표 수정']].map(([a, b, c], i) =>
+        `<div class="tr" style="--k:${i}"><span>${a}</span><span class="arr">→</span><span><b>${b}</b>${c ? `<small>${c}</small>` : ''}</span></div>`).join('')}</div>` },
+  { ch: 4, head: '이번엔 ‘자동차’, ‘장난감’, ‘사물’을 배웁니다.', coords: true,
+    enter() { objT = 0; timers.push(setTimeout(() => { objT = 1; applyScene(); }, 1300)); },
+    scene: () => ({ axes: 1, pts: { ...pts(FAM, 'tgt'), ...pts(OBJ, learned) } }), hud: () => ledger(WORDS) },
+  { ch: 4, head: '비슷한 것끼리 모였습니다. 이 *배치*가 곧 지능입니다.', sub: '말 → 숫자(좌표) → 공간 속 배치. 더 잘 배치할수록 = 더 좋은 임베딩 모델.', coords: true,
+    scene: () => ({ axes: 1, pts: pts(WORDS, 'tgt') }) },
+  { ch: 4, head: '퀴즈! ‘*아기*’는 어디쯤 놓일까요?', sub: '평면 위를 눌러 답을 찍어보세요. 몇 번이든 다시 찍어도 됩니다.', coords: true,
+    gate: () => !!guess,
+    onTap(p) { guess = clampR(p, 1.05); applyScene(); refreshAct(); updateGate(); },
+    scene: () => ({ axes: 1, pts: { ...pts(WORDS, 'tgt', Object.fromEntries(WORDS.map(id => [id, { op: 0.55 }]))),
+      ...(guess ? { guess: { at: guess }, baby: { at: EXTRA.baby.tgt, hl: 1 } } : {}) },
+      rays: guess ? { guess: 1, baby: 1 } : {}, arc: guess ? ['guess', 'baby'] : null }),
+    act: () => guess ? quizMsg() : `<span class="hint2">👆 평면 위 한 곳을 눌러보세요</span>` },
+
+  // 유사도
+  { ch: 5, head: '얼마나 비슷한지는 *방향*으로 잽니다.', sub: '원점에서 각 단어로 화살표를 긋습니다.',
+    scene: () => ({ axes: 1, pts: pts(WORDS, 'tgt'), rays: Object.fromEntries(WORDS.map(id => [id, 1])) }) },
+  { ch: 5, head: '‘가족’과 ‘엄마’ — 사이 각이 좁습니다. *비슷하다*.',
+    scene: () => focusPair('fam', 'mom') },
+  { ch: 5, head: '‘가족’과 ‘자동차’ — 사이 각이 넓습니다. *다르다*.',
+    scene: () => focusPair('fam', 'car') },
+  { ch: 5, head: '‘사물’은 ‘자동차’, ‘장난감’ 쪽을 *향합니다*.',
+    scene: () => { const s = focusPair('obj', 'car'); s.pts.toy.op = 1; s.rays.toy = 1; return s; } },
+  { ch: 5, head: '기준 단어를 고르고, 점을 *직접* 옮겨보세요.', sub: '이 값이 ‘코사인 유사도’. 1에 가까울수록 같은 방향, 0이면 상관없음, 음수면 반대쪽. 점을 끌면 순위가 바로 바뀝니다.', coords: true,
+    drag: WORDS,
+    scene: () => { const top = topWord(base);
+      return { axes: 1, pts: pts(WORDS, wp, { [base]: { hl: 1 } }), rays: Object.fromEntries(WORDS.map(id => [id, id === base || id === top ? 1 : 0.25])), arc: [base, top] }; },
+    hud: () => rankWords(base),
+    act: () => `<div class="chips">${WORDS.map(id => `<button class="chip ${W[id].g} ${id === base ? 'on' : ''}" data-base="${id}">${W[id].label}</button>`).join('')}</div>` },
+
+  // 차원
+  { ch: 6, head: '차원을 늘리면, 더 *복잡한* 지능을 담을 수 있습니다.', sub: '지금까지는 x, y 두 칸이었습니다. 두 칸으로는 “엄마는 가족이면서 여자이고 어른이고 나를 돌봐주는 사람”이라는 관계를 다 담을 수 없습니다. 칸(차원)을 늘리면 담을 수 있는 관계가 풍부해집니다.',
+    rotate3d: true,
+    coords: id => ['mom', 'dog'].includes(id) ? `(${f2(ENT[id].tgt[0])}, ${f2(ENT[id].tgt[1])}, ${f2(ENT[id].z)})` : '',
+    enter() { spin = true; yaw = 0; pitch = 0.35; },
+    tick(t, dt) { if (spin) yaw += dt * 0.6; W3.forEach(id => { const p = proj([...ENT[id].tgt, ENT[id].z], yaw, pitch); ts[id + '.x'] = p[0]; ts[id + '.y'] = p[1]; }); },
+    draw: () => axes3d(yaw, pitch),
+    scene: () => ({ axes: 0, sc: { axes3: 1 }, pts: pts(W3, 'tgt') }),
+    hud: () => `<div class="hk">축이 하나 늘자 생긴 ‘겹치는 관계’</div><div><b>인형</b> = 장난감이면서, 사람을 닮았다</div><div><b>강아지</b> = 동물이면서, 가족 같다</div>`,
+    act: () => `<span class="hint2">👆 그림을 끌어서 직접 돌려보세요</span>` },
+  { ch: 6, head: '실제 AI는 *768차원*, 1024차원을 씁니다.', sub: '요즘 임베딩 모델은 말 하나를 보통 768차원, 1024차원, 많게는 3000차원이 넘는 벡터로 바꿉니다. 칸 하나 = 차원 하나. 차원이 많을수록 관계는 풍부해지지만, 계산은 무거워집니다.', map: false,
+    act: () => `<details class="more"><summary>각 차원에는 무슨 이름이 붙어 있나요?</summary>
+      <p>이름이 없습니다. 앞의 ‘소’ 규칙표(다리 4개, 뿔이 있다)처럼 사람이 붙인 기준이 아니라, AI가 학습하면서 스스로 만든 축입니다. 그래서 사람이 칸 하나하나를 해석하기는 어렵습니다.</p>
+      <p>계산이 무거워지는 이야기는 2편의 GPU로 이어집니다.</p></details>`,
+    panel: () => `<div class="vwrap">${grid(vMom)}<div class="vcap"><b>엄마</b> = 768차원 벡터 (칸 768개)</div></div>` },
+  { ch: 6, head: '‘엄마’와 ‘아빠’는 무늬가 *닮았고*, ‘자동차’는 다릅니다.', sub: '차원이 많아도 계산법은 같습니다. 화살표 두 개의 방향을 비교하면 됩니다.', map: false,
+    panel: () => `<div class="v3">
+      <div class="vwrap">${grid(vMom)}<div class="vcap"><b>엄마</b></div></div>
+      <div class="vwrap">${grid(vDad)}<div class="vcap"><b>아빠</b> · <span class="sim hi">유사도 ${cosSim(vMom, vDad).toFixed(2)}</span></div></div>
+      <div class="vwrap">${grid(vCar)}<div class="vcap"><b>자동차</b> · <span class="sim lo">유사도 ${f2(cosSim(vMom, vCar))}</span></div></div></div>` },
+  { ch: 6, kicker: '1편 · 05 차원 · 정의', head: '임베딩 = 말의 *뜻*을 공간 속 위치(숫자)로 바꾸는 것.', sub: '그래서 뜻이 비슷한 말은, 숫자도 비슷하고 방향도 비슷합니다.', map: false,
+    panel: () => `<div class="chain">
+      <div class="cbox" style="--k:0"><div class="big">“엄마”</div><div class="cap">말</div></div>
+      <span class="carr" style="--k:1">→</span>
+      <div class="cbox" style="--k:1"><div class="big mono" style="font-size:18px">[0.17, 0.80, −0.31, …]</div><div class="cap">768차원 벡터</div></div>
+      <span class="carr" style="--k:2">→</span>
+      <div class="cbox" style="--k:2"><svg viewBox="-60 -60 120 120" width="110" height="110"><circle r="50" fill="none" stroke="var(--grid)"/><line x1="-56" x2="56" class="axis"/><line y1="-56" y2="56" class="axis"/><line x2="9" y2="-40" class="ray fam"/><circle cx="9" cy="-40" r="6" fill="var(--fam)"/></svg><div class="cap">의미 공간 속 한 점</div></div></div>` },
+
+  // 검색
+  { ch: 7, head: '이제 이걸로 *검색*을 해봅시다.', sub: '업무 문서마다 임베딩을 해서, 공간 속에 미리 놓아둡니다.',
+    scene: () => ({ axes: 1, pts: pts(DOCS, 'tgt') }) },
+  { ch: 7, head: '질문도 같은 방식으로 공간에 놓습니다.', q: () => 'q1',
+    scene: () => ({ axes: 1, pts: { ...pts(DOCS, 'tgt'), q1: { at: D.q1.tgt, hl: 1 } } }) },
+  { ch: 7, head: '질문과 방향이 가장 가까운 문서 *k개*를 고릅니다.', sub: '‘시간 초과’라는 단어가 없어도, 뜻이 가까운 ‘타임아웃’ 문서를 찾습니다. 질문을 바꾸거나 k를 조절해 보세요.',
+    enter() { ragQ = 'q1'; topK = 3; }, drag: ['q1', 'q3'], q: () => ragQ,
+    scene: () => ragScene(ragQ, false, null, topK), hud: () => rankDocs(ragQ, false, null, topK),
+    act: () => `<div class="chips">${['q1', 'q3'].map(q => `<button class="chip qc ${q === ragQ ? 'on' : ''}" data-q="${q}">“${QTEXT[q]}”</button>`).join('')}</div>
+      <div class="kctl"><span class="hk">top-k</span><div class="chips sm">${[1, 3, 5].map(k => `<button class="chip ${k === topK ? 'on' : ''}" data-k="${k}">${k}개</button>`).join('')}</div>
+      <span class="hk">${topK === 1 ? '너무 적으면 근거가 빠질 수 있고' : topK === 5 ? '너무 많으면 엉뚱한 문서가 섞여 LLM이 헷갈립니다' : '보통 3~5개에서 시작해 조절합니다'}</span></div>` },
+  { ch: 7, head: '고른 문서를 질문과 함께 *LLM*에게 건넵니다.', map: false, q: () => 'q1',
+    panel: () => { const top = topIds('q1', false); const snip = { d1: '연계 전송 타임아웃 기본값과 변경 방법…', d2: '수신 서버 응답이 늦을 때 재처리하는 순서…', d3: '오류 로그 위치와 읽는 법…' };
+      return `<div class="prompt">
+      <div class="pl sys" style="--k:0"><b>[지시]</b>아래 문서만 근거로 답하세요. 문서에 없으면 모른다고 하세요.</div>
+      ${top.map((id, i) => `<div class="pl doc" style="--k:${i + 1}"><b>[문서 ${i + 1}]</b>${D[id].label} — ${snip[id] || ''}</div>`).join('')}
+      <div class="pl q" style="--k:4"><b>[질문]</b>전송이 자꾸 시간 초과로 끊겨요</div>
+      <div class="flow"><span class="llm">LLM</span><span>→</span><span class="ans">타임아웃 값을 늘리고, 재처리 절차를 확인하세요. (문서 1, 2 근거)</span></div></div>`; } },
+  { ch: 7, head: '찾아서, 붙여서, 답한다. 이게 *RAG*입니다.', sub: 'LLM이 원래 모르는 우리 회사 문서도 근거로 답하게 만드는 방법입니다.', map: false,
+    panel: () => `<div class="rag">
+      <div class="card" style="--k:0"><div class="L">R</div><div><div class="en">Retrieval</div><p class="ai">가까운 문서를 찾는다</p></div></div>
+      <div class="card" style="--k:1"><div class="L">A</div><div><div class="en">Augmented</div><p class="ai">질문에 붙인다</p></div></div>
+      <div class="card" style="--k:2"><div class="L">G</div><div><div class="en">Generation</div><p class="ai">그걸 근거로 답한다</p></div></div></div>` },
+  { ch: 7, head: '단, ‘*E-4012*’ 같은 코드에는 약합니다.', sub: '임베딩은 뜻을 보지, 글자 하나하나를 보지 않거든요. 정답 문서가 4위로 밀렸습니다.',
+    q: () => 'q2', scene: () => ragScene('q2', false, 'd4'), hud: () => rankDocs('q2', false, 'd4') },
+  { ch: 7, head: '그래서 *키워드* 검색을 섞습니다.', sub: '글자가 정확히 일치하면 가산점. 실무 RAG는 대부분 이 ‘하이브리드 검색’을 씁니다.',
+    enter() { hybrid = true; }, q: () => 'q2',
+    scene: () => ragScene('q2', hybrid, hybrid ? null : 'd4'), hud: () => rankDocs('q2', hybrid, hybrid ? null : 'd4'),
+    act: () => `<label class="switch"><input type="checkbox" data-hybrid ${hybrid ? 'checked' : ''}> 키워드 검색 섞기</label>` },
+
+  // 한 단계 더
+  // 1편 마무리: 정의로 닫고
+  { ch: 8, solo: true, kicker: '1편 · 마무리', head: '다시 한 번. ' + DEF1, sub: '말과 말 사이의 위치를 숫자로 배우면, AI도 뜻을 알고, 비슷한 것을 찾아냅니다.',
+    act: () => `<ol class="recap">
+      <li style="--k:0"><b>임베딩</b> 말의 뜻을 공간 속 위치(숫자)로 바꾸는 것</li>
+      <li style="--k:1"><b>유사도</b> 두 점이 원점에서 얼마나 같은 방향을 보는가</li>
+      <li style="--k:2"><b>RAG</b> 질문과 가까운 문서를 찾아, LLM에게 함께 건네는 것</li></ol>
+      <button class="cta" data-go style="margin:18px 0 0">2편: 그 숫자는 어떻게 계산될까 →</button><button class="btn" data-jump="0" style="margin-top:18px">목차</button>` },
+
+  // 2편 시작: 정의로 열고
+  { ch: 9, solo: true, kicker: '2편 · 그 숫자는 어떻게 계산될까', head: DEF2, sub: '1편의 ‘위치 감각’을 실제로 만들어내는 장치, 그리고 그 계산을 감당하는 GPU를 들여다봅니다.',
+    act: () => `<button class="cta pulse" data-go>시작하기 →</button>` },
+  { ch: 10, head: '규칙 시스템에선 변수가 사람 *눈앞*에 있었습니다.', sub: '무엇을 입력하고 어떻게 계산할지 전부 보였습니다. 예: 점수표로 하는 대출 심사.', map: false,
+    panel: () => rulePanel() },
+  { ch: 10, head: '신경망은 공간을 *여러* 번 바꿔가며 답을 찾습니다.', sub: '중간 공간의 숫자들엔 사람이 이름을 붙일 수 없습니다. 변수가 ‘사람 시야 바깥’으로 나간 것이죠. 그 속에 관계가 담깁니다.', map: false,
+    panel: () => netPanel() },
+  { ch: 10, head: '한 층을 지날 때마다, 점들이 *옮겨집니다*.', sub: '초록과 보라를 직선 하나로 가를 수 있을까요? 지금은 안 됩니다. 버튼으로 층을 통과시켜 보세요.',
+    enter() { nnStep = 0; }, gate: () => nnStep >= 3,
+    scene: () => ({ axes: 1, pts: Object.fromEntries(NN.map((p, i) => ['n' + i, { at: nnPos(p, nnStep) }])), sc: { bound: nnStep >= 3 ? 1 : 0 } }),
+    draw: () => nnBoundary(), hud: () => nnHud(),
+    act: () => `<button class="cta ${nnStep < 3 ? 'pulse' : ''}" data-nn ${nnStep >= 3 ? 'disabled' : ''}>${['① 행렬 곱하기 ▶', '② 접기: 음수는 0으로 ▶', '③ 경계선 긋기 ▶', '✓ 이제 직선 하나로 갈립니다'][nnStep]}</button><span class="cnt">${nnStep} / 3</span>
+      ${nnStep >= 1 ? `<div class="explain">이렇게 공간 전체를 옮기는 계산이 <b>행렬 곱셈</b>입니다. 아래 상자의 2×2 행렬이 그 계산입니다.${nnStep >= 3 ? ' 신경망은 이런 공간 이동을 수십, 수백 겹 쌓아서 단어를 점점 쓸모 있는 공간으로 옮깁니다. 행렬 곱셈을 빠르게 하는 장치가 <b>GPU</b>이고, AI에 GPU가 필요한 이유가 이것입니다.' : ''}</div>` : ''}` },
+  { ch: 10, head: '학습 = 이 행렬 속 숫자(*가중치*)를 고치는 일.', sub: '답이 틀릴 때마다 숫자를 조금씩 고칩니다. 아기가 칭찬으로 배우던 바로 그 과정. ‘7B 모델’이면 이런 숫자가 70억 개입니다.', map: false,
+    enter() { timers.push(setInterval(tickWeights, 140)); }, panel: () => weightPanel() },
+  { ch: 10, head: '같은 말도 *문맥*에 따라 자리가 달라집니다.', sub: '주변 말과의 관계를 계산해 위치를 고치는 것. 이게 트랜스포머의 ‘어텐션’, 강연 표현으로는 “관계를 만드는 시스템”입니다. 문장을 골라보세요.',
+    enter() { ctx = null; }, scene: () => attScene(),
+    act: () => `<div class="chips">${Object.entries(CTX).map(([k, c]) => `<button class="chip qc ${ctx === k ? 'on' : ''}" data-ctx="${k}">“${c.text}”</button>`).join('')}</div>` },
+  { ch: 10, head: '이런 층을 *수십* 개 쌓은 것이 LLM입니다.', sub: '말이 층을 하나 지날 때마다 문맥이 섞인, 더 쓸모 있는 좌표가 됩니다. 마지막 좌표로 다음 말을 고릅니다.', map: false,
+    panel: () => stackPanel() },
+
+  // GPU
+  { ch: 11, head: '이 모든 계산은 결국 *곱하고* 더하기.', sub: '앞에서 본 ‘공간 옮기기’ = 행렬 곱셈. 768차원 층 하나만 해도 곱셈이 약 59만 번(768 × 768)이고, 이런 층이 수십~수백 겹입니다.', map: false,
+    panel: () => matPanel() },
+  { ch: 11, head: 'CPU는 똑똑한 몇 명, GPU는 단순한 *수천* 명.', sub: '행렬 곱셈은 칸마다 따로 계산해도 되는 일이라, 일꾼이 많을수록 빨라집니다. 그래서 AI엔 GPU.', map: false,
+    enter() { timers.push(setTimeout(runRace, 700)); }, panel: () => cpuGpuPanel(),
+    act: () => `<button class="cta" data-race>다시 계산 ▶</button>` },
+  { ch: 11, head: '모델은 GPU 메모리(*VRAM*)에 통째로 올라가야 빠릅니다.', sub: 'VRAM은 GPU 바로 앞 책상, RAM은 옆방 창고. 책상에 다 못 올리면 창고를 오가느라 크게 느려집니다. 조합을 바꿔보세요.', map: false,
+    panel: () => vramPanel(), act: () => vramAct() },
+
+  // 정리
+  // 2편 마무리: 정의로 닫고
+  { ch: 12, solo: true, kicker: '2편 · 마무리', head: '다시 한 번. ' + DEF2, sub: '그 계산은 결국 엄청난 양의 곱셈이라, 수천 명의 일꾼(GPU)과 큰 책상(VRAM)이 필요합니다.', act: () => `<ol class="recap">
+      <li style="--k:0"><b>층</b> 공간을 늘리고 접어, 답이 잘 갈리게 점을 옮기는 계산</li>
+      <li style="--k:1"><b>가중치</b> 그 행렬 속 숫자. 학습 = 이 숫자를 고치는 일</li>
+      <li style="--k:2"><b>어텐션</b> 문맥 속 말들과의 관계로 위치를 다시 잡는 것</li>
+      <li style="--k:3"><b>GPU</b> 곱셈을 한꺼번에 하는 수천 명의 일꾼</li>
+      <li style="--k:4"><b>VRAM</b> 모델의 숫자를 통째로 올려둘 GPU 앞 책상</li></ol>
+      <button class="btn" data-jump="0" style="margin:18px 8px 0 auto">목차</button>
+      <button class="cta" data-restart style="margin:18px auto 0">처음부터 다시</button>
+      <p class="credit">문병로 교수 강연 「AI 기술의 새 사조」의 아이디어를 참고해 새로 그렸습니다. 모든 숫자와 문서는 설명용 예시입니다.</p>` },
+];
+
+function focusPair(a, b) {
+  return { axes: 1, pts: pts(WORDS, 'tgt', Object.fromEntries(WORDS.map(id => [id, { op: id === a || id === b ? 1 : 0.25 }]))),
+    rays: { [a]: 1, [b]: 1 }, arc: [a, b] };
+}
+function ragScene(q, useKw, missId, n = 3) {
+  const top = topIds(q, useKw, n);
+  const ex = Object.fromEntries(DOCS.map(id => [id, { op: top.includes(id) || id === missId ? 1 : 0.35, hl: top.includes(id) ? 1 : 0, bad: id === missId }]));
+  return { axes: 1, pts: { ...pts(DOCS, 'tgt', ex), [q]: { at: at(q, D[q].tgt) } }, rays: Object.fromEntries([q, ...top].map(id => [id, 1])) };
+}
+function quizMsg() {
+  const c = cosSim(guess, EXTRA.baby.tgt);
+  const m = c >= 0.9 ? '🎯 거의 정확해요! ‘아기’는 엄마·아빠·가족 곁에 놓입니다.'
+    : c >= 0.6 ? '👍 방향이 비슷해요. 정답은 가족 쪽에 조금 더 가깝습니다.'
+    : '🤔 조금 멀어요. ‘아기’는 엄마·아빠·가족과 늘 같이 쓰이니까 그쪽에 놓입니다.';
+  return `<div class="qmsg"><div>${m}</div><div class="hk">내 답과 정답의 유사도 <b class="mono">${f2(c)}</b></div></div>`;
+}
+function updateQbar() { const q = beat.q ? beat.q() : null, el = $('#qbar'); if (q) el.innerHTML = `<span class="qk">🙋 질문</span> “${QTEXT[q]}”`; el.classList.toggle('show', !!q); }
+function refreshAct() { $('#act').innerHTML = beat.act ? beat.act() : ''; }
+
+/* ---------- 규칙 vs 관계: ‘소’ ---------- */
+function cowRule() {
+  const rules = ['다리가 4개다', '뿔이 있다', '풀을 먹는다', '‘음메’ 하고 운다'], ex = ['뿔 없는 소는?', '다리를 다친 소는?', '그림 속 소는?', '송아지는?'];
+  return `<div class="cowr"><div class="card" style="--k:0"><h3>규칙으로 정의한 ‘소’</h3>
+    ${rules.map((r, i) => `<div class="rl" style="--k:${i}">✓ ${r}</div>`).join('')}</div>
+    <div class="exs">${ex.map((e, i) => `<span class="ex" style="--k:${i}">${e}</span>`).join('')}</div>
+    <p class="note" style="animation-delay:3.4s">예외마다 규칙을 또 적어야 합니다. 끝이 없습니다.</p></div>`;
+}
+function cowRel() {
+  const nb = [['우유', 0.95], ['풀', 0.85], ['농장', 0.8], ['송아지', 0.9], ['음메', 0.7], ['고기', 0.6], ['말(馬)', 0.45], ['트랙터', 0.35]];
+  const c = [300, 175];
+  const el = nb.map(([w, s], i) => { const a = i / nb.length * Math.PI * 2 - Math.PI / 2, r = 70 + (1 - s) * 110, x = c[0] + Math.cos(a) * r * 1.5, y = c[1] + Math.sin(a) * r;
+    return `<line x1="${c[0]}" y1="${c[1]}" x2="${x}" y2="${y}" class="rline" style="--k:${i};stroke-width:${1 + s * 4}"/>
+      <g class="rnode" style="--k:${i}"><circle cx="${x}" cy="${y}" r="7" fill="var(--obj)"/><text x="${x}" y="${y - 14}" text-anchor="middle" class="dt s">${w}</text></g>`; }).join('');
+  return `<svg viewBox="0 0 600 350" class="diag">${el}<circle cx="${c[0]}" cy="${c[1]}" r="30" fill="var(--fam)"/><text x="${c[0]}" y="${c[1] + 7}" text-anchor="middle" class="dt b" style="fill:var(--bg)">소</text></svg>
+    <p class="note" style="animation-delay:2s">선이 굵을수록 더 자주 함께 쓰이는 말. ‘소’를 정의하는 건 이 연결 전체입니다.</p>`;
+}
+
+/* ---------- 아기 장면: 주변에 떠다니는 소리 ---------- */
+function babble(t) {
+  const op = cs['babyE.op'] || 0; if (op < 0.01) return '';
+  return ['엄마', '맘마', '빠빠', '붕붕', '까까', '멍멍'].map((w, i) => {
+    const a = (i * 60 + t * 14) * Math.PI / 180, r = 165 + 18 * Math.sin(t * 0.9 + i);
+    const o = op * (0.3 + 0.35 * (1 + Math.sin(t * 1.4 + i * 1.7)) / 2);
+    return `<text class="lab halo" x="${C + r * Math.cos(a)}" y="${C + 12 - r * Math.sin(a) * 0.75}" text-anchor="middle" opacity="${o.toFixed(3)}" style="font-size:18px">${w}?</text>`;
+  }).join('');
+}
+
+/* ---------- 신경망 장면 ---------- */
+const nnPos = (p, s) => s === 0 ? [p.x, p.y] : s === 1 ? [p.x, -p.x + 0.15 * p.y] : [Math.max(0, p.x), Math.max(0, -p.x + 0.15 * p.y)];
+function nnBoundary() {
+  const op = cs.bound || 0; if (op < 0.01) return '';
+  const [x1, y1] = P(-0.35, 0.79), [x2, y2] = P(0.79, -0.35), [lx, ly] = P(0.6, -0.2);
+  return `<g opacity="${op.toFixed(3)}"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--ink)" stroke-width="2.5" stroke-dasharray="8 6"/>
+    <text class="lab halo" x="${lx + 10}" y="${ly + 4}">경계선</text></g>`;
+}
+function nnHud() {
+  return [
+    `<div class="hk">입력 공간</div><div>초록이 양쪽, 보라가 가운데 — <b>직선 하나로는 못 가름</b></div>`,
+    `<div class="hk">① 새 좌표 = 행렬 × 좌표</div><div class="mono mat">[ 1    0   ]<br>[ −1  0.15 ]</div><div>공간을 늘리고 비틀어, 점들이 대각선으로 모였습니다</div>`,
+    `<div class="hk">② 접기 (ReLU)</div><div>음수는 0으로. 왼쪽 초록은 위로, 오른쪽 초록은 오른쪽으로 접혀 나갔습니다</div>`,
+    `<div class="hk">③ 새 공간</div><div><b>이제 직선 하나로 갈립니다 ✓</b> 이렇게 ‘가를 수 있는 공간’을 만드는 게 층이 하는 일</div>`,
+  ][nnStep];
+}
+function attScene() {
+  const c = ctx ? CTX[ctx] : null;
+  const lines = c ? Object.fromEntries(c.to.map(id => ['att_' + id, { a: 'cmp', b: id, cls: 'att', label: '' }])) : {};
+  return { axes: 1, pts: { ...pts(['sch', 'stu', 'spo', 'soc'], 'tgt'), cmp: { at: c ? c.at : ENT.cmp.tgt, hl: 1 } }, lines };
+}
+function rulePanel() {
+  const ys = [50, 95, 140, 185, 230, 275], names = ['소득', '부채', '연체', '나이', '…', '근속'];
+  return `<svg viewBox="0 0 620 330" class="diag">
+    ${ys.map((y, i) => `<rect x="20" y="${y - 16}" width="70" height="32" rx="6" class="dbox"/><text x="55" y="${y + 5}" text-anchor="middle" class="dt">${names[i]}</text>
+      <line x1="92" y1="${y}" x2="228" y2="${165 + (i - 2.5) * 14}" class="darr" style="--k:${i}"/>`).join('')}
+    <rect x="230" y="95" width="190" height="140" rx="12" class="drule"/>
+    <text x="325" y="150" text-anchor="middle" class="dt b">사람이 만든 규칙</text>
+    <text x="325" y="180" text-anchor="middle" class="dt m">점수 = 2×소득 − 3×부채 …</text>
+    <line x1="422" y1="165" x2="520" y2="165" class="darr" style="--k:7"/>
+    <text x="560" y="171" text-anchor="middle" class="dt b">답</text>
+    <text x="325" y="290" text-anchor="middle" class="dt red">변수가 사람 시야 안에 있다</text></svg>`;
+}
+function netPanel() {
+  const cols = [[60, 6], [230, 8], [400, 8], [560, 1]], col = ['var(--doc)', 'var(--query)', 'var(--obj)', 'var(--ink)'];
+  const ny = (n, j) => n === 1 ? 165 : 40 + j * (250 / (n - 1));
+  let e = '', f = '', nodes = ''; const r = rng(3);
+  for (let c = 0; c < 3; c++) {
+    const [xa, na] = cols[c], [xb, nb] = cols[c + 1];
+    for (let i = 0; i < na; i++) for (let j = 0; j < nb; j++) {
+      const l = `x1="${xa}" y1="${ny(na, i)}" x2="${xb}" y2="${ny(nb, j)}"`;
+      e += `<line ${l} class="edge"/>`;
+      if (r() < 0.22) f += `<line ${l} class="eflow" style="--k:${c};stroke:${col[c + 1]};animation-delay:${(c * 0.6 + r() * 0.4).toFixed(2)}s"/>`;
+    }
+  }
+  cols.forEach(([x, n], c) => { for (let j = 0; j < n; j++) nodes += `<circle cx="${x}" cy="${ny(n, j)}" r="9" fill="${col[c]}" class="node" style="--k:${c}"/>`; });
+  return `<svg viewBox="0 0 640 380" class="diag">${e}${f}${nodes}
+    <text x="590" y="171" class="dt b">답</text>
+    <path d="M220 18 Q315 2 410 18" fill="none" stroke="var(--bad)" stroke-width="2"/><text x="315" y="12" text-anchor="middle" class="dt red s">사람 시야 바깥</text>
+    ${[[60, '시작 공간'], [145, '공간 변환'], [230, '다른 공간'], [315, '공간 변환'], [400, '다른 공간'], [480, '공간 변환']].map(([x, t], i) => `<text x="${x}" y="${i % 2 ? 360 : 330}" text-anchor="middle" class="dt ${i % 2 ? 'm' : 's'}">${t}</text>`).join('')}</svg>
+    <p class="note" style="animation-delay:.6s">입력은 말·사진을 바꾼 숫자들. 층을 지날 때마다 ‘관계가 반영된’ 새 좌표가 됩니다.</p>`;
+}
+function weightPanel() {
+  const r = rng(9);
+  return `<div class="vwrap"><div class="wgrid">${Array.from({ length: 96 }, () => `<span>${f2((r() - 0.5) * 2)}</span>`).join('')}</div>
+    <div class="vcap">행렬 속 숫자 하나하나 = <b>가중치(파라미터)</b> · 지금 학습 중…</div>
+    <div class="pcount"><span><b>7B</b> 70억 개</span><span><b>70B</b> 700억 개</span><span><b>최신 대형 모델</b> 수천억 개 이상</span></div></div>`;
+}
+function tickWeights() {
+  const s = panel.querySelectorAll('.wgrid span'); if (!s.length) return;
+  for (let k = 0; k < 7; k++) { const el = s[Math.floor(Math.random() * s.length)]; el.textContent = f2((Math.random() - 0.5) * 2); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+}
+function stackPanel() {
+  const L = ['층 1', '층 2', '층 3', '…', '층 N'];
+  return `<div class="stack"><div class="sout">다음 말 고르기 → “경쟁<b>했다</b>”</div>
+    ${L.slice().reverse().map((l, i) => `<div class="layer ${l === '…' ? 'dots' : ''}" style="--k:${L.length - i}">${l === '…' ? '⋮' : `<b>${l}</b><span>어텐션(관계 계산) → 공간 변환</span>`}</div>`).join('')}
+    <div class="sin">입력: ‘경쟁’의 좌표 [0.12, −0.40, …]</div><i class="token"></i></div>`;
+}
+function matPanel() {
+  const M = [[1, 0, 2], [0, 1, -1], [2, 1, 0]], v = [0.5, 1, 0.25], res = M.map(r => r.reduce((s, m, j) => s + m * v[j], 0));
+  return `<div class="mm">
+    <div class="mbr">${M.map((r, i) => `<div class="mr" style="--k:${i}">${r.map(x => `<span>${f2(x).replace('.00', '')}</span>`).join('')}</div>`).join('')}</div>
+    <div class="op">×</div><div class="mbr col">${v.map(x => `<span>${x}</span>`).join('')}</div>
+    <div class="op">=</div><div class="mbr col res">${res.map((x, i) => `<span style="--k:${i}">${x}</span>`).join('')}</div></div>
+    <div class="mf">${M.map((r, i) => `<div style="--k:${i}">${r.map((m, j) => `${f2(m).replace('.00', '')}×${v[j]}`).join(' + ')} = <b>${res[i]}</b></div>`).join('')}</div>
+    <p class="note" style="animation-delay:.3s">한 줄 = 곱하기 3번 + 더하기. 실제 모델은 이런 줄이 수천, 층이 수십.</p>`;
+}
+function cpuGpuPanel() {
+  const g = id => `<div class="race" id="${id}">${'<i></i>'.repeat(256)}</div>`;
+  return `<div class="rwrap"><div class="rcol"><div class="rh2">CPU · 똑똑한 일꾼 8명</div>${g('rc')}<div class="rt" id="rct">대기</div></div>
+    <div class="rcol"><div class="rh2">GPU · 단순한 일꾼 수천 명 <small>(그림은 128명)</small></div>${g('rg')}<div class="rt" id="rgt">대기</div></div></div>`;
+}
+function runRace() {
+  const run = (id, per, tid) => {
+    const cells = panel.querySelectorAll(`#${id} i`); if (!cells.length) return;
+    cells.forEach(c => c.classList.remove('on')); let n = 0, turn = 0;
+    const iv = setInterval(() => { turn++; for (let k = 0; k < per && n < cells.length; k++) cells[n++].classList.add('on');
+      const t = $('#' + tid); if (t) t.textContent = n >= cells.length ? `✓ ${turn}번 만에 끝` : `${turn}번째…`;
+      if (n >= cells.length) clearInterval(iv); }, 90);
+    timers.push(iv);
+  };
+  run('rc', 8, 'rct'); run('rg', 128, 'rgt');
+}
+function vramPanel() {
+  const need = vm.p * vm.bits / 8 * 1.2, blk = 4, nb = Math.ceil(need / blk), slots = vm.gpu / blk;
+  const inV = Math.min(nb, slots), out = nb - inV, shown = Math.min(out, 30);
+  const b = (n, cls, d0) => Array.from({ length: n }, (_, i) => `<i class="${cls}" style="--d:${(d0 + i) * 35}"></i>`).join('');
+  return `<div class="vr">
+    <div class="vbox"><div class="vh">GPU 책상 · VRAM ${vm.gpu}GB</div><div class="slots">${b(inV, 'blk', 0)}${Array.from({ length: slots - inV }, () => '<i class="empty"></i>').join('')}</div></div>
+    <div class="vbox ram ${out ? 'over' : ''}"><div class="vh">옆방 창고 · RAM</div><div class="slots">${b(shown, 'blk bad', inV)}${out > shown ? `<span class="more">+${out - shown}</span>` : ''}</div></div>
+    <div class="vres ${out ? 'no' : 'ok'}">${vm.p}B × ${vm.bits === 16 ? '2바이트' : '0.5바이트'} × 1.2 ≈ <b>${Math.round(need)}GB</b> 필요 →
+      ${out ? `✗ 약 ${Math.round(need - vm.gpu)}GB가 RAM으로 넘침 · 크게 느려짐` : '✓ 책상에 다 올라감 · 빠름'}</div>
+    <p class="vnote">숫자 하나의 크기 × 개수 + 작업 공간(약 20%). 답변 생성(추론) 기준 대략값이며, 학습엔 몇 배 더 필요합니다.</p></div>`;
+}
+function vramAct() {
+  const g = (k, opts) => `<div class="chips sm">${opts.map(([v, l]) => `<button class="chip ${vm[k] === v ? 'on' : ''}" data-vm="${k}:${v}">${l}</button>`).join('')}</div>`;
+  return `<div class="vctl"><div class="hk">모델 크기</div>${g('p', [[7, '7B'], [14, '14B'], [32, '32B'], [70, '70B']])}
+    <div class="hk">숫자 정밀도</div>${g('bits', [[16, '16비트'], [4, '4비트 (양자화)']])}
+    <div class="hk">GPU</div>${g('gpu', [[24, '24GB 게이밍급'], [48, '48GB 워크스테이션급'], [80, '80GB 서버급']])}</div>`;
+}
+function rotHud() {
+  const c = cosSim([cs['fam.x'], cs['fam.y']], [cs['mom.x'], cs['mom.y']]);
+  return `<div class="lrow fam"><b>엄마</b><span class="hk">좌표</span><span class="mono">(${f2(cs['mom.x'])}, ${f2(cs['mom.y'])})</span></div>
+    <div class="lrow fam"><b>가족</b><span class="hk">좌표</span><span class="mono">(${f2(cs['fam.x'])}, ${f2(cs['fam.y'])})</span></div>
+    <div class="lrow"><b style="color:var(--ink)">유사도</b><span class="mono">${c.toFixed(2)}</span><span class="ok">그대로</span></div>`;
+}
+function proj([x, y, z], ya, pi = 0) {
+  const X = x * Math.cos(ya) + z * Math.sin(ya), Z1 = -x * Math.sin(ya) + z * Math.cos(ya);
+  const Y = y * Math.cos(pi) - Z1 * Math.sin(pi), Z = y * Math.sin(pi) + Z1 * Math.cos(pi);
+  const f = 1 / (1 + Z * 0.22); return [X * f * 0.92, Y * f * 0.92];
+}
+function axes3d(ya, pi) {
+  const op = cs.axes3 || 0; if (op < 0.01) return '';
+  const ax = [[[1.15, 0, 0], 'x'], [[0, 1.15, 0], 'y'], [[0, 0, 1.15], 'z']];
+  return `<g opacity="${op.toFixed(3)}">${ax.map(([v, n]) => { const a = proj(v, ya, pi), b = proj(v.map(c => -c), ya, pi); const [x1, y1] = P(...b), [x2, y2] = P(...a);
+    return `<line class="axis" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><text class="axl" x="${x2 + 8}" y="${y2 + 4}">${n}</text>`; }).join('')}</g>`;
+}
+
+/* ---------- 무대 엔진: 목표값만 정하면 부드럽게 따라감 ---------- */
+const map = $('#map'), hud = $('#hud'), panel = $('#panel');
+function applyScene() {
+  const s = beat.scene ? beat.scene() : {};
+  for (const id in ENT) { ts[id + '.op'] = 0; ts['ray.' + id] = 0; ts[id + '.hl'] = 0; }
+  for (const k in lineDefs) ts['line.' + k] = 0;
+  ts.axes = s.axes ? 1 : 0; ts.arc = 0; ts.axes3 = 0;
+  ts.map = beat.map === false ? 0 : 1;
+  Object.assign(ts, s.sc || {});
+  for (const [id, p] of Object.entries(s.pts || {})) {
+    ts[id + '.x'] = p.at[0]; ts[id + '.y'] = p.at[1];
+    ts[id + '.op'] = p.op ?? 1; ts[id + '.hl'] = p.hl || 0;
+    ENT[id]._bad = !!p.bad;
+    if (!((cs[id + '.op'] || 0) > 0.03)) { cs[id + '.x'] = p.at[0]; cs[id + '.y'] = p.at[1]; } // 안 보이던 점은 제자리에서 나타남
+  }
+  for (const [id, v] of Object.entries(s.rays || {})) ts['ray.' + id] = v;
+  for (const [k, l] of Object.entries(s.lines || {})) { lineDefs[k] = l; ts['line.' + k] = 1; }
+  if (s.arc) { arcDef = s.arc; ts.arc = 1; }
+}
+const pos = id => [cs[id + '.x'] || 0, cs[id + '.y'] || 0];
+function labelAt(id, x, y) {
+  const e = ENT[id];
+  if (e.lab) return [x + e.lab[0], y + e.lab[1], e.lab[2]];
+  const [px, py] = pos(id), m = Math.hypot(px, py);
+  if (m < 0.1) return [x, y - 18, 'middle'];
+  const ux = px / m, uy = -py / m, off = 17 + 5 * (cs[id + ".hl"] || 0), lx = x + ux * off, ly = y + uy * off;
+  if (ux > 0.35) return [lx + 2, ly + 6, 'start'];
+  if (ux < -0.35) return [lx - 2, ly + 6, 'end'];
+  return [lx, uy < 0 ? ly - 2 : ly + 16, 'middle'];
+}
+function render(t) {
+  let s = '';
+  const ax = cs.axes || 0;
+  if (ax > 0.01) {
+    s += `<g opacity="${ax.toFixed(3)}"><circle class="ring0" cx="${C}" cy="${C}" r="${R}"/><circle class="ring0" cx="${C}" cy="${C}" r="${R / 2}"/>
+      <line class="axis" x1="${C - R * 1.15}" y1="${C}" x2="${C + R * 1.15}" y2="${C}"/><line class="axis" x1="${C}" y1="${C - R * 1.15}" x2="${C}" y2="${C + R * 1.15}"/>
+      <text class="axl" x="${C + R * 1.15 + 8}" y="${C + 4}">x</text><text class="axl" x="${C + 6}" y="${C - R * 1.15 - 6}">y</text>
+      <circle cx="${C}" cy="${C}" r="3.5" fill="var(--muted)"/></g>`;
+  }
+  if (beat.draw) s += beat.draw(t);
+  for (const k in lineDefs) {
+    const op = cs['line.' + k] || 0; if (op < 0.01) continue;
+    const l = lineDefs[k], pa = pos(l.a), pb = pos(l.b), [x1, y1] = P(...pa), [x2, y2] = P(...pb);
+    const lab = typeof l.label === 'function' ? l.label(Math.hypot(pa[0] - pb[0], pa[1] - pb[1])) : l.label;
+    s += `<g opacity="${op.toFixed(3)}"><line class="link ${l.cls}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>
+      <text class="linkl halo ${l.cls}" x="${(x1 + x2) / 2}" y="${(y1 + y2) / 2 - 10}" text-anchor="middle">${lab}</text></g>`;
+  }
+  for (const id in ENT) {
+    const op = cs['ray.' + id] || 0; if (op < 0.01 || (cs[id + '.op'] || 0) < 0.01) continue;
+    const [x, y] = P(...pos(id));
+    s += `<line class="ray ${ENT[id].g}" x1="${C}" y1="${C}" x2="${x}" y2="${y}" opacity="${(op * cs[id + '.op']).toFixed(3)}"/>`;
+  }
+  const ao = cs.arc || 0;
+  if (ao > 0.01 && arcDef) {
+    const [a, b] = arcDef.map(pos), a1 = Math.atan2(a[1], a[0]); let d = Math.atan2(b[1], b[0]) - a1;
+    while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+    const r = 64, sx = C + r * Math.cos(a1), sy = C - r * Math.sin(a1), ex = C + r * Math.cos(a1 + d), ey = C - r * Math.sin(a1 + d);
+    const m = a1 + d / 2, lx = C + 112 * Math.cos(m), ly = C - 112 * Math.sin(m), c = cosSim(a, b);
+    s += `<g opacity="${ao.toFixed(3)}"><path class="arc" d="M${sx},${sy} A${r},${r} 0 0 ${d > 0 ? 0 : 1} ${ex},${ey}"/>
+      <text class="arcl halo" x="${lx}" y="${ly - 2}" text-anchor="middle">${Math.round(Math.abs(d) * 180 / Math.PI)}°</text>
+      <text class="arcl halo" x="${lx}" y="${ly + 16}" text-anchor="middle">유사도 ${f2(c)}</text></g>`;
+  }
+  for (const id in ENT) {
+    const op = cs[id + '.op'] || 0; if (op < 0.01) continue;
+    const e = ENT[id], [x, y] = P(...pos(id)), hl = cs[id + '.hl'] || 0;
+    if (e.emoji) {
+      s += `<g opacity="${op.toFixed(3)}"><text x="${x}" y="${y}" font-size="54" text-anchor="middle" dominant-baseline="central">${e.emoji}</text>
+        <text class="lab halo" x="${x}" y="${y + 50}" text-anchor="middle">${e.label}</text></g>`;
+    } else {
+      const [lx, ly, anc] = labelAt(id, x, y);
+      let crd = '';
+      if (beat.coords && (e.g === 'fam' || e.g === 'obj' || id === 'guess') && op > 0.8) {
+        const [px, py] = pos(id), str = typeof beat.coords === 'function' ? beat.coords(id) : `(${f2(px)}, ${f2(py)})`;
+        if (str) crd = `<text class="crd halo" x="${lx}" y="${anc === 'middle' && ly < y ? ly - 18 : ly + 17}" text-anchor="${anc}">${str}</text>`;
+      }
+      const dr = beat.drag && beat.drag.includes(id);
+      s += `<g class="pt ${e.g}${dr ? ' drag' : ''}" opacity="${op.toFixed(3)}">${hl > 0.02 ? `<circle class="ring" cx="${x}" cy="${y}" r="${10 + 6 * hl}" opacity="${hl.toFixed(3)}"/>` : ''}
+        ${e._bad && op > 0.5 ? `<circle class="ring bad" cx="${x}" cy="${y}" r="16"/>` : ''}
+        ${dr ? `<circle class="grab" cx="${x}" cy="${y}" r="15"/>` : ''}
+        <circle class="dot" cx="${x}" cy="${y}" r="${(7 * (0.5 + 0.5 * op)).toFixed(2)}"/>
+        ${e.label ? `<text class="lab halo" x="${lx}" y="${ly}" text-anchor="${anc}">${e.label}</text>` : ''}${crd}</g>`;
+    }
+  }
+  map.innerHTML = s;
+  map.style.opacity = (cs.map ?? 1).toFixed(3);
+}
+let last = performance.now(), hudHtml = '';
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  const t = now / 1000;
+  if (beat.tick) beat.tick(t, dt);
+  const a = reduce ? 1 : 1 - Math.exp(-dt * 5.5);
+  let moving = false;
+  for (const k in ts) {
+    if (cs[k] === undefined) cs[k] = k.endsWith('.op') || k.startsWith('ray.') || k.startsWith('line.') || k.endsWith('.hl') ? 0 : ts[k];
+    const d = ts[k] - cs[k]; if (Math.abs(d) > 1e-4) { cs[k] += d * a; moving = true; } else cs[k] = ts[k];
+  }
+  if (moving || beat.tick || beat.draw) render(t);
+  if (beat.hud) { const h = beat.hud(); if (h !== hudHtml) { hud.innerHTML = h; hudHtml = h; } }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- 진행 ---------- */
+const chapters = $('#chapters');
+let barPart = -1;
+function buildBar(p) {
+  if (p === barPart) return; barPart = p;
+  chapters.innerHTML = CH.map((c, i) => [c, i]).filter(([c]) => p && c.p === p).map(([c, i]) => `<button class="chap" data-ch="${i}" style="--n:${BEATS.filter(b => b.ch === i).length}"><span class="bar"><span class="fill"></span></span><span class="lab">${c.t}</span></button>`).join('');
+  $('.brand').textContent = p ? `${PARTS[p][0]} · ${PARTS[p][1]}` : 'AI의 지능은 공간감각이다';
+}
+function kickerOf(b) {
+  const c = CH[b.ch]; if (!c.p) return '';
+  const nums = CH.filter(x => x.p === c.p && x.t !== '시작' && x.t !== '마무리'), n = nums.indexOf(c);
+  return n < 0 ? `${PARTS[c.p][0]} · ${c.t}` : `${PARTS[c.p][0]} · ${String(n + 1).padStart(2, '0')} ${c.t}`;
+}
+const fmt = s => s.split(' ').map((w, i) => `<span class="w" style="--i:${i}">${w.replace(/\*(.+?)\*/g, '<em>$1</em>')}</span>`).join(' ');
+
+function go(i, first) {
+  i = Math.max(0, Math.min(BEATS.length - 1, i));
+  timers.forEach(clearTimeout); timers = [];
+  idx = i; beat = BEATS[i]; t0 = performance.now() / 1000; over = {}; drag = null;
+  if (beat.enter) beat.enter();
+  applyScene();
+  map.classList.toggle('interactive', !!(beat.drag || beat.rotate3d || beat.onTap));
+  map.classList.toggle('tap', !!beat.onTap);
+
+  const copy = $('#copy');
+  copy.classList.add('out');
+  setTimeout(() => {
+    const n = beat.head.split(' ').length;
+    $('#kicker').textContent = beat.kicker || kickerOf(beat);
+    $('#head').innerHTML = fmt(beat.head);
+    const sub = $('#sub'); sub.textContent = beat.sub || ''; sub.className = 'sub late'; sub.style.setProperty('--n', n); sub.hidden = !beat.sub;
+    const act = $('#act'); act.innerHTML = beat.act ? beat.act() : ''; act.className = 'act late'; act.style.setProperty('--n', n + 3);
+    $('#main').classList.toggle('solo', !!beat.solo);
+    $('#dust').classList.toggle('show', !!beat.solo);
+    copy.classList.remove('out');
+  }, first ? 0 : 190);
+
+  panel.classList.remove('show');
+  const me = beat;
+  setTimeout(() => { if (me === beat && me.panel) { panel.innerHTML = me.panel(); panel.classList.add('show'); } }, first ? 0 : 260);
+  if (!beat.panel) setTimeout(() => { if (me === beat) panel.innerHTML = ''; }, 400);
+  hud.classList.toggle('show', !!beat.hud); hudHtml = ''; if (!beat.hud) hud.innerHTML = '';
+  updateQbar();
+
+  buildBar(CH[beat.ch].p);
+  document.querySelectorAll('.chap').forEach(el => {
+    const c = +el.dataset.ch, list = BEATS.map((b, k) => [b, k]).filter(([b]) => b.ch === c), pos = list.findIndex(([, k]) => k === idx);
+    const done = list[0][1] > idx ? 0 : list[list.length - 1][1] < idx ? 1 : (pos + 1) / list.length;
+    el.querySelector('.fill').style.width = done * 100 + '%'; el.classList.toggle('cur', c === beat.ch);
+  });
+  $('#count').textContent = `${idx + 1} / ${BEATS.length}`;
+  $('#prev').disabled = idx === 0;
+  $('#next').hidden = idx === BEATS.length - 1;
+  updateGate();
+  try { history.replaceState(null, '', '#' + (idx + 1)); } catch (e) {}
+}
+function updateGate() {
+  const locked = beat.gate && !beat.gate();
+  const nb = $('#next'); nb.disabled = !!locked; nb.classList.toggle('wait', !!locked);
+  $('#hint').textContent = locked ? '위 버튼을 눌러야 넘어갈 수 있어요' : '→ 키 · 스페이스로 넘기기';
+}
+const next = () => { if (!(beat.gate && !beat.gate())) go(idx + 1); };
+const prev = () => go(idx - 1);
+
+/* ---------- 입력 ---------- */
+$('#next').onclick = next; $('#prev').onclick = prev;
+chapters.onclick = e => { const b = e.target.closest('.chap'); if (b) go(BEATS.findIndex(x => x.ch === +b.dataset.ch)); };
+const toast = $('#toast');
+$('#act').addEventListener('click', e => {
+  const t = e.target.closest('button,input'); if (!t) return;
+  if (t.hasAttribute('data-go')) next();
+  if (t.dataset.jump !== undefined) { const c = +t.dataset.jump; go(c === 0 ? 0 : BEATS.findIndex(b => b.ch === c)); return; }
+  if (t.hasAttribute('data-restart')) { learnT = 0; objT = 0; base = 'fam'; guess = null; go(0); }
+  if (t.hasAttribute('data-clap') && learnT < 0.99) {
+    const n = Math.round(learnT * 3); learnT = Math.min(1, (n + 1) / 3);
+    toast.textContent = '👏 “맞아!”'; toast.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove('show'), 1200);
+    if (learnT > 0.99) { $('#next').classList.add('pulse'); setTimeout(() => $('#next').classList.remove('pulse'), 2000); }
+    applyScene(); refreshAct(); updateGate();
+  }
+  if (t.hasAttribute('data-clapreset')) { learnT = 0; applyScene(); refreshAct(); updateGate(); }
+  if (t.dataset.base) { base = t.dataset.base; document.querySelectorAll('[data-base]').forEach(c => c.classList.toggle('on', c.dataset.base === base)); applyScene(); }
+  if (t.hasAttribute('data-hybrid')) { hybrid = t.checked; applyScene(); }
+  if (t.dataset.q) { ragQ = t.dataset.q; document.querySelectorAll('[data-q]').forEach(c => c.classList.toggle('on', c.dataset.q === ragQ)); applyScene(); updateQbar(); }
+});
+$('#act').addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.hasAttribute('data-nn') && nnStep < 3) { nnStep++; applyScene(); refreshAct(); updateGate(); }
+  if (t.dataset.ctx) { ctx = t.dataset.ctx; applyScene(); document.querySelectorAll('[data-ctx]').forEach(c => c.classList.toggle('on', c.dataset.ctx === ctx)); }
+  if (t.dataset.k) { topK = +t.dataset.k; applyScene(); refreshAct(); }
+  if (t.hasAttribute('data-race')) { timers.forEach(clearTimeout); timers = []; runRace(); }
+  if (t.dataset.vm) { const [k, v] = t.dataset.vm.split(':'); vm[k] = +v; refreshAct(); panel.innerHTML = vramPanel(); }
+});
+
+/* 지도 위 직접 조작: 점 끌기 · 3D 돌리기 · 눌러서 찍기 */
+let drag = null;
+function toMath(e) {
+  const pt = map.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+  const p = pt.matrixTransform(map.getScreenCTM().inverse());
+  return [(p.x - C) / R, (C - p.y) / R];
+}
+map.addEventListener('pointerdown', e => {
+  if (!beat || beat.map === false) return;
+  if (beat.rotate3d) { drag = { kind: '3d', sx: e.clientX, sy: e.clientY, yaw, pitch }; spin = false; try { map.setPointerCapture(e.pointerId); } catch (_) {} return; }
+  const m = toMath(e);
+  if (beat.drag) {
+    let best = null, bd = 0.16;
+    for (const id of beat.drag) {
+      if ((cs[id + '.op'] || 0) < 0.5) continue;
+      const d = Math.hypot(pos(id)[0] - m[0], pos(id)[1] - m[1]); if (d < bd) { bd = d; best = id; }
+    }
+    if (best) { drag = { kind: 'pt', id: best, off: [pos(best)[0] - m[0], pos(best)[1] - m[1]] }; try { map.setPointerCapture(e.pointerId); } catch (_) {} map.classList.add('dragging'); return; }
+  }
+  if (beat.onTap) beat.onTap(m);
+});
+map.addEventListener('pointermove', e => {
+  if (!drag) return;
+  if (drag.kind === '3d') {
+    yaw = drag.yaw + (e.clientX - drag.sx) * 0.01;
+    pitch = Math.max(-1.3, Math.min(1.3, drag.pitch + (e.clientY - drag.sy) * 0.01));
+    return;
+  }
+  const m = toMath(e), id = drag.id;
+  let p = [m[0] + drag.off[0], m[1] + drag.off[1]];
+  p = ENT[id].emoji ? [Math.max(-1.25, Math.min(1.25, p[0])), Math.max(-1.05, Math.min(1.05, p[1]))] : clampR(p, 1.15);
+  if (!ENT[id].emoji && Math.hypot(...p) < 0.05) p = [0.05, 0];   // 원점에선 방향이 없으니 살짝 비켜둠
+  over[id] = p; applyScene();
+  cs[id + '.x'] = ts[id + '.x'] = p[0]; cs[id + '.y'] = ts[id + '.y'] = p[1];
+  render(performance.now() / 1000);
+});
+const endDrag = () => { drag = null; map.classList.remove('dragging'); };
+map.addEventListener('pointerup', endDrag); map.addEventListener('pointercancel', endDrag);
+panel.addEventListener('pointerover', e => {
+  const c = e.target.closest('.vg i'); if (!c) return;
+  const r = c.closest('.vwrap').querySelector('.vread'); if (r) r.textContent = `${c.dataset.i}번째 숫자 = ${c.dataset.v}`;
+});
+document.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('button,input') && (e.key === ' ' || e.key === 'Enter')) return;
+  if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); next(); }
+  if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); prev(); }
+});
+let tx = null, ty = null;
+document.addEventListener('touchstart', e => {
+  if (e.target.closest && (e.target.closest('#map.interactive') || e.target.closest('input'))) { tx = null; return; }   // 지도를 조작할 땐 넘기지 않음
+  tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+}, { passive: true });
+document.addEventListener('touchend', e => {
+  if (tx === null) return; const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty; tx = null;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) dx < 0 ? next() : prev();
+}, { passive: true });
+
+/* 시작·끝 화면 배경 점 */
+const cols = ['var(--fam)', 'var(--obj)', 'var(--doc)', 'var(--query)'];
+$('#dust').innerHTML = Array.from({ length: 34 }, (_, i) => {
+  const r = rng(100 + i); return `<span style="left:${r() * 100}%;top:${r() * 100}%;--s:${6 + r() * 14}px;--c:${cols[i % 4]};--t:${6 + r() * 8}s;--dx:${(r() - 0.5) * 120}px;--dy:${(r() - 0.5) * 120}px"></span>`;
+}).join('');
+
+/* 시작: #번호로 바로 이동 가능 (발표용) */
+let startAt = 0;
+try { const h = parseInt(location.hash.slice(1), 10); if (h > 0) startAt = h - 1; } catch (e) {}
+if (startAt > BEATS.findIndex(b => b.gate)) learnT = 1;
+if (startAt > BEATS.findIndex(b => b.ch === 4 && b.enter)) objT = 1;
+if (startAt > BEATS.findIndex(b => b.onTap)) guess = [0.3, 0.6];
+if (startAt > BEATS.findIndex(b => b.ch === 10 && b.gate)) nnStep = 3;
+go(startAt, true);
+requestAnimationFrame(frame);
+})();
+</script>
