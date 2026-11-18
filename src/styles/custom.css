@@ -7,3 +7,16 @@
 .study-category small { color: var(--sl-color-gray-2); margin-top: auto; }
 .sl-markdown-content .study-category { margin-top: 0; }
 @media (max-width: 40rem) { .study-categories { grid-template-columns: 1fr; } }
+
+/* 슬라이드 바로 시작 카드 */
+.slide-starts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,16rem),1fr));gap:1rem;margin-top:1rem}
+.slide-start{display:flex;flex-direction:column;gap:.35rem;padding:1.1rem 1.25rem;border:1px solid var(--sl-color-gray-5);border-radius:.75rem;text-decoration:none;color:var(--sl-color-white);background:var(--sl-color-gray-7, var(--sl-color-black));transition:border-color .15s,transform .15s}
+.slide-start:hover,.slide-start:focus-visible{border-color:var(--sl-color-accent)}
+@media (prefers-reduced-motion:no-preference){.slide-start:hover{transform:translateY(-2px)}}
+.slide-start__kicker{font-size:var(--sl-text-xs);color:var(--sl-color-gray-3)}
+.slide-start strong{font-size:var(--sl-text-xl);line-height:1.3}
+.slide-start span{color:var(--sl-color-gray-2)}
+.slide-start small{margin-top:.4rem;display:flex;justify-content:space-between;color:var(--sl-color-gray-3)}
+.slide-start small b{color:var(--sl-color-accent-high)}
+.slide-starts__more{margin-top:.75rem;font-size:var(--sl-text-sm)}
+.sl-markdown-content .slide-starts a{text-decoration:none}

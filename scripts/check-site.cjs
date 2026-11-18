@@ -18,7 +18,7 @@ const fs = require('node:fs/promises');
     await page.screenshot({ path: `.artifacts/screenshots/wiki-${route.replaceAll('/', '-')}.png`, fullPage: true });
   }
   const links = page.locator('main a[href^="/ai/spatial-sense/#"]');
-  assert.equal(await links.count(), 49);
+  assert.equal(await links.count(), 51); // 장면 목차 49 + 바로 시작 카드 2
   await links.filter({ hasText: '10.' }).first().click();
   assert.equal(new URL(page.url()).hash, '#10');
   await page.locator('#open-scenes').click();

@@ -1,0 +1,20 @@
+---
+// 1편·2편의 첫 장면으로 바로 들어가는 시작 카드. 번호는 원본 장면 데이터에서 계산한다.
+import { chapters, parts, scenes } from '../generated/slides.json';
+const starts = Object.entries(parts).map(([part, info]) => {
+  const first = scenes.find((scene) => chapters[scene.ch]?.p === Number(part));
+  const count = scenes.filter((scene) => chapters[scene.ch]?.p === Number(part)).length;
+  return { part, info, href: `/ai/spatial-sense/#${first?.number ?? 1}`, count };
+});
+---
+<div class="slide-starts">
+  {starts.map(({ info, href, count }) => (
+    <a class="slide-start" href={href}>
+      <span class="slide-start__kicker">AI의 지능은 공간감각이다 · {info[0]}</span>
+      <strong>{info[1]}</strong>
+      <span>{info[2]}</span>
+      <small>{count}장면 · {info[3]} <b aria-hidden="true">시작 →</b></small>
+    </a>
+  ))}
+</div>
+<p class="slide-starts__more"><a href="/ai/spatial-sense-guide/">전체 장면 목차에서 원하는 장면 고르기</a></p>
