@@ -1,0 +1,9 @@
+:root { --sl-font: 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif; }
+.study-categories { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.study-category { display: flex; flex-direction: column; gap: .65rem; padding: 1.25rem; border: 1px solid var(--sl-color-gray-5); border-radius: .7rem; color: var(--sl-color-text); text-decoration: none; }
+.study-category:hover { border-color: var(--sl-color-text-accent); background: var(--sl-color-bg-nav); }
+.study-category strong { font-size: 1.25rem; color: var(--sl-color-white); }
+.study-category strong span { float: right; color: var(--sl-color-text-accent); }
+.study-category small { color: var(--sl-color-gray-2); margin-top: auto; }
+.sl-markdown-content .study-category { margin-top: 0; }
+@media (max-width: 40rem) { .study-categories { grid-template-columns: 1fr; } }

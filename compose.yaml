@@ -3,7 +3,7 @@ name: ai-spatial-sense
 services:
   web:
     build: .
-    image: ai-spatial-sense:1.0.0
+    image: ai-spatial-sense:2.0.0
     restart: unless-stopped
     ports:
       - "127.0.0.1:8082:8080"

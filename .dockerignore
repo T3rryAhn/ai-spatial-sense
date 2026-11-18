@@ -1,0 +1,8 @@
+node_modules
+dist
+.astro
+.git
+.artifacts
+archive
+public/ai/spatial-sense
+src/generated

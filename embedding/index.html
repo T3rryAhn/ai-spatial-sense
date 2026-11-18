@@ -63,6 +63,26 @@ button{font:inherit;color:inherit;cursor:pointer}
 .main.solo .head{font-size:clamp(32px,5.2vw,64px)}
 .main.solo .act{justify-content:center}
 
+/* 넓은 화면에서도 글과 그림을 한 시야에 둔다. 좁은 창·모바일 규칙은 유지한다. */
+@media (min-width:1200px){
+  .main:not(.solo){width:100%;max-width:1440px;margin-inline:auto;padding-inline:0;gap:24px}
+  .main:not(.solo) .copy{justify-self:end;width:100%}
+}
+.study-tools{display:flex;gap:8px;white-space:nowrap;align-items:flex-start;height:0}
+.study-tools a,.study-tools button{display:inline-flex;align-items:center;height:20px;font:inherit;font-size:12px;line-height:18px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:0 7px;text-decoration:none}
+.scene-dialog{width:min(760px,calc(100% - 24px));max-height:85dvh;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);overflow:auto}
+.scene-dialog::backdrop{background:rgb(0 0 0 / .55)}
+.scene-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:-20px;background:var(--bg);padding:10px 0}
+.scene-dialog h2{font-size:20px;margin:0}
+.scene-dialog h3{font-size:18px;margin:24px 0 12px}
+.scene-dialog h4{font-size:14px;color:var(--muted);margin:16px 0 6px}
+.scene-dialog ol{list-style:none;padding:0;margin:0}
+.scene-dialog a{display:block;padding:9px;border-radius:6px;color:var(--ink);text-decoration:none;font-size:14px}
+.scene-dialog a:hover,.scene-dialog a[aria-current="step"]{background:var(--line)}
+.scene-dialog a[aria-current="step"]{font-weight:700}
+.scene-dialog a[aria-current="step"]::after{content:' · 현재 장면';color:var(--fam)}
+:focus-visible{outline:2px solid var(--fam);outline-offset:3px}
+
 .stage{position:relative;height:100%;min-height:0;display:grid;place-items:center}
 #map{width:100%;height:100%;max-height:100%;display:block;transition:opacity .4s}
 .panel{position:absolute;inset:0;display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .35s;overflow:auto;padding:8px 0}
@@ -330,6 +350,7 @@ svg text{font-family:var(--sans)}
   <header class="top">
     <div class="brand">AI의 지능은 공간감각이다</div>
     <nav class="chapters" id="chapters" aria-label="챕터"></nav>
+    <div class="study-tools"><a href="/ai/">위키로</a><button id="open-scenes" aria-haspopup="dialog" aria-controls="scene-dialog">목차</button></div>
   </header>
   <main class="main" id="main">
     <section class="copy" id="copy" aria-live="polite">
@@ -353,6 +374,11 @@ svg text{font-family:var(--sans)}
     <button class="btn next" id="next">다음 →</button>
   </footer>
 </div>
+
+<dialog class="scene-dialog" id="scene-dialog" aria-labelledby="scene-dialog-title">
+  <header><h2 id="scene-dialog-title">전체 장면 목차</h2><button class="btn" id="close-scenes" autofocus>닫기</button></header>
+  <nav id="scene-links" aria-label="편·섹션별 장면"></nav>
+</dialog>
 
 <script>
 (() => {
@@ -973,6 +999,10 @@ function go(i, first) {
   i = Math.max(0, Math.min(BEATS.length - 1, i));
   timers.forEach(clearTimeout); timers = [];
   idx = i; beat = BEATS[i]; t0 = performance.now() / 1000; over = {}; drag = null;
+  document.querySelectorAll('[data-scene]').forEach(link => {
+    if (+link.dataset.scene === idx) link.setAttribute('aria-current', 'step');
+    else link.removeAttribute('aria-current');
+  });
   if (beat.enter) beat.enter();
   applyScene();
   map.classList.toggle('interactive', !!(beat.drag || beat.rotate3d || beat.onTap));
@@ -1019,6 +1049,34 @@ const next = () => { if (!(beat.gate && !beat.gate())) go(idx + 1); };
 const prev = () => go(idx - 1);
 
 /* ---------- 입력 ---------- */
+const sceneDialog = $('#scene-dialog');
+const sceneList = (ch) => '<ol>' + BEATS.map((b, i) => b.ch === ch
+  ? `<li><a href="#${i + 1}" data-scene="${i}">${i + 1}. ${b.head.replace(/\*/g, '')}</a></li>` : '').join('') + '</ol>';
+$('#scene-links').innerHTML = sceneList(0) + Object.entries(PARTS).map(([p, info]) =>
+  `<h3>${info[0]} · ${info[1]}</h3>` + CH.map((c, ch) => c.p === +p
+    ? `<h4>${c.t}</h4>${sceneList(ch)}` : '').join('')).join('');
+$('#open-scenes').onclick = () => {
+  sceneDialog.showModal();
+  sceneDialog.querySelector('[aria-current="step"]')?.scrollIntoView({ block: 'center' });
+};
+$('#close-scenes').onclick = () => sceneDialog.close();
+$('#scene-links').onclick = e => {
+  const link = e.target.closest('[data-scene]');
+  if (!link) return;
+  e.preventDefault();
+  sceneDialog.close();
+  jumpTo(+link.dataset.scene);
+};
+function jumpTo(i) {
+  if (i > BEATS.findIndex(b => b.gate)) learnT = 1;
+  if (i > BEATS.findIndex(b => b.ch === 4 && b.enter)) objT = 1;
+  if (i > BEATS.findIndex(b => b.onTap)) guess = [0.3, 0.6];
+  if (i > BEATS.findIndex(b => b.ch === 10 && b.gate)) nnStep = 3;
+  go(i, true);
+}
+window.addEventListener('hashchange', () => {
+  if (/^#[1-9]\d*$/.test(location.hash)) jumpTo(Number(location.hash.slice(1)) - 1);
+});
 $('#next').onclick = next; $('#prev').onclick = prev;
 chapters.onclick = e => { const b = e.target.closest('.chap'); if (b) go(BEATS.findIndex(x => x.ch === +b.dataset.ch)); };
 const toast = $('#toast');
@@ -1091,12 +1149,14 @@ panel.addEventListener('pointerover', e => {
   const r = c.closest('.vwrap').querySelector('.vread'); if (r) r.textContent = `${c.dataset.i}번째 숫자 = ${c.dataset.v}`;
 });
 document.addEventListener('keydown', e => {
-  if (e.target.closest && e.target.closest('button,input') && (e.key === ' ' || e.key === 'Enter')) return;
+  if (sceneDialog.open) return;
+  if (e.target.closest && e.target.closest('button,input,a,select,textarea') && (e.key === ' ' || e.key === 'Enter')) return;
   if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); next(); }
   if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); prev(); }
 });
 let tx = null, ty = null;
 document.addEventListener('touchstart', e => {
+  if (sceneDialog.open) { tx = null; return; }
   if (e.target.closest && (e.target.closest('#map.interactive') || e.target.closest('input'))) { tx = null; return; }   // 지도를 조작할 땐 넘기지 않음
   tx = e.touches[0].clientX; ty = e.touches[0].clientY;
 }, { passive: true });
@@ -1114,11 +1174,7 @@ $('#dust').innerHTML = Array.from({ length: 34 }, (_, i) => {
 /* 시작: #번호로 바로 이동 가능 (발표용) */
 let startAt = 0;
 try { const h = parseInt(location.hash.slice(1), 10); if (h > 0) startAt = h - 1; } catch (e) {}
-if (startAt > BEATS.findIndex(b => b.gate)) learnT = 1;
-if (startAt > BEATS.findIndex(b => b.ch === 4 && b.enter)) objT = 1;
-if (startAt > BEATS.findIndex(b => b.onTap)) guess = [0.3, 0.6];
-if (startAt > BEATS.findIndex(b => b.ch === 10 && b.gate)) nnStep = 3;
-go(startAt, true);
+jumpTo(startAt);
 requestAnimationFrame(frame);
 })();
 </script>

@@ -1,0 +1,10 @@
+---
+import { getCollection } from 'astro:content';
+const { category } = Astro.props;
+const docs = (await getCollection('docs'))
+  .filter((doc) => doc.id.startsWith(category + '/') && doc.id !== category + '/index')
+  .sort((a, b) => (a.data.sidebar?.order ?? Infinity) - (b.data.sidebar?.order ?? Infinity)
+    || a.data.title.localeCompare(b.data.title, 'ko'));
+---
+{docs.length ? <ul>{docs.map((doc) => <li><a href={`/${doc.id}/`}>{doc.data.title}</a></li>)}</ul>
+  : <p>등록된 문서는 아직 없습니다.</p>}

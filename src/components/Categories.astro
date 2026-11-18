@@ -1,0 +1,12 @@
+---
+import { categories } from '../categories.mjs';
+---
+<div class="study-categories">
+  {categories.map(({ slug, label, description }) => (
+    <a class="study-category" href={`/${slug}/`}>
+      <strong>{label} <span aria-hidden="true">↗</span></strong>
+      <span>{description}</span>
+      <small>{slug === 'ai' ? '인터랙티브 학습 자료' : '준비 중'}</small>
+    </a>
+  ))}
+</div>

@@ -1,0 +1,16 @@
+---
+import { chapters, parts, scenes } from '../generated/slides.json';
+---
+{Object.entries(parts).map(([part, info]) => (
+  <section aria-label={`${info[0]} · ${info[1]}`}>
+    <h3>{info[0]} · {info[1]}</h3>
+    {chapters.map((chapter, ch) => chapter.p === Number(part) && (
+      <section aria-label={chapter.t}>
+        <h4>{chapter.t}</h4>
+        <ul>{scenes.filter((scene) => scene.ch === ch).map((scene) => (
+          <li><a href={`/ai/spatial-sense/#${scene.number}`}>{scene.number}. {scene.title}</a></li>
+        ))}</ul>
+      </section>
+    ))}
+  </section>
+))}

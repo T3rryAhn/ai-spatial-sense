@@ -1,0 +1,9 @@
+---
+import DefaultHead from '@astrojs/starlight/components/Head.astro';
+---
+<DefaultHead />
+{Astro.url.pathname === '/' && <script is:inline>
+  if (/^#[1-9]\d*$/.test(location.hash)) {
+    location.replace('/ai/spatial-sense/' + location.hash);
+  }
+</script>}
