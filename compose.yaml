@@ -1,0 +1,27 @@
+# 로컬 실행 예시. 홈서버 운영값(바인딩 IP·포트·방화벽)은 별도 private 저장소에서 관리한다.
+name: ai-spatial-sense
+services:
+  web:
+    build: .
+    image: ai-spatial-sense:1.0.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8082:8080"
+    read_only: true
+    tmpfs:
+      - /tmp:size=8m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+    cpus: 0.25
+    pids_limit: 32
+    environment:
+      NGINX_ENTRYPOINT_WORKER_PROCESSES_AUTOTUNE: ""
+    logging:
+      driver: json-file
+      options: {max-size: "2m", max-file: "2"}
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1:8080/healthz]
+      interval: 30s
+      timeout: 3s
+      retries: 3
