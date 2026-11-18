@@ -1,0 +1,934 @@
+<title>의미의 지도</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: 한 줄로 내려가는 '장면' 노트. 넓은 화면에서는 설명(왼쪽) + 직접 만져보는 판(오른쪽). 모눈종이 위의 좌표가 주제. */
+:root{
+  --bg:#F2F5F4; --paper:#FBFCFB; --ink:#16212A; --muted:#58656E; --line:#D3DCDA; --grid:#E2E9E7;
+  --family:#11837C; --object:#4A53C6; --query:#DD522E; --doc:#A86F14; --good:#2C8653; --bad:#BF3F38;
+  --family-soft:#11837C22; --object-soft:#4A53C622; --query-soft:#DD522E1F;
+  --font-body:"IBM Plex Sans KR","Pretendard","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  --font-mono:"IBM Plex Mono","D2Coding",Consolas,"Courier New",monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1418; --paper:#151D22; --ink:#E3E9EC; --muted:#97A4AB; --line:#2B373E; --grid:#1C262C;
+  --family:#3CC0B6; --object:#9198F3; --query:#FF7C57; --doc:#E2A84C; --good:#5DC48B; --bad:#F27E74;
+  --family-soft:#3CC0B62a; --object-soft:#9198F32a; --query-soft:#FF7C5726; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1418; --paper:#151D22; --ink:#E3E9EC; --muted:#97A4AB; --line:#2B373E; --grid:#1C262C;
+  --family:#3CC0B6; --object:#9198F3; --query:#FF7C57; --doc:#E2A84C; --good:#5DC48B; --bad:#F27E74;
+  --family-soft:#3CC0B62a; --object-soft:#9198F32a; --query-soft:#FF7C5726; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:1100px;margin:0 auto}
+h1,h2,h3{text-wrap:balance;line-height:1.3;margin:0}
+p{margin:0}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--query);outline-offset:2px}
+
+/* header */
+header.hero{padding-block:56px 28px;display:grid;gap:18px}
+.eyebrow{font-size:13px;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.hero h1{font-size:clamp(34px,6vw,56px);font-weight:700;letter-spacing:-.02em}
+.hero .lead{font-size:clamp(17px,2.2vw,20px);max-width:42em;color:var(--ink)}
+.hero .ticker{font-family:var(--font-mono);font-size:clamp(15px,2.4vw,19px);color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
+.hero .ticker b{color:var(--query);font-weight:500}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--muted)}
+
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin-bottom:8px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav.toc ol{list-style:none;margin:0;padding:10px 0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+nav.toc a{display:block;white-space:nowrap;text-decoration:none;color:var(--muted);font-size:14px;padding:4px 10px;border-radius:999px;border:1px solid transparent}
+nav.toc a:hover{color:var(--ink);border-color:var(--line)}
+nav.toc a.on{color:var(--ink);border-color:var(--ink)}
+
+/* scenes */
+section.scene{padding-block:56px;border-bottom:1px solid var(--line);scroll-margin-top:60px}
+.scene-head{display:grid;gap:8px;margin-bottom:26px;max-width:46em}
+.scene-no{font-family:var(--font-mono);font-size:13px;color:var(--query);letter-spacing:.06em}
+.scene h2{font-size:clamp(24px,3.6vw,32px);font-weight:700;letter-spacing:-.01em}
+.scene-head p{color:var(--muted)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:32px;align-items:start}
+@media (max-width:860px){.cols{grid-template-columns:minmax(0,1fr)}}
+.prose{display:grid;gap:14px;min-width:0}
+.prose p{max-width:36em}
+.def{border-left:3px solid var(--query);padding:4px 0 4px 14px;font-weight:600;font-size:18px}
+.def small{display:block;font-weight:400;font-size:14px;color:var(--muted);margin-top:2px}
+.note{font-size:14px;color:var(--muted)}
+.quote{font-size:17px;padding:14px 16px;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius)}
+.quote cite{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:6px}
+
+.board{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:grid;gap:12px;min-width:0}
+.board svg{width:100%;height:auto;display:block;max-width:520px;margin:0 auto;user-select:none;-webkit-user-select:none}
+.board svg.drag{touch-action:none}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--paper);padding:7px 14px;border-radius:8px;font-size:15px;font-weight:500}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn:disabled{opacity:.38;cursor:not-allowed}
+.chip{border:1px solid var(--line);background:transparent;padding:4px 12px;border-radius:999px;font-size:14px}
+.chip.on{background:var(--query);border-color:var(--query);color:#fff}
+.chip[data-group="family"].on{background:var(--family);border-color:var(--family)}
+.chip[data-group="object"].on{background:var(--object);border-color:var(--object)}
+.status{font-size:15px;min-height:1.7em}
+.label-row{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--query)}
+.slider{display:grid;gap:2px}
+.slider label{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
+.slider label .mono{color:var(--ink)}
+
+/* svg styles */
+.gridline{stroke:var(--grid);stroke-width:1}
+.axis{stroke:var(--line);stroke-width:1.5}
+.axislabel{fill:var(--muted);font-size:12px;font-family:var(--font-mono)}
+.origin{fill:var(--ink)}
+.wlabel{font-size:15px;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--paper);stroke-width:4px;stroke-linejoin:round}
+.wcoord{font-size:11px;fill:var(--muted);font-family:var(--font-mono);paint-order:stroke;stroke:var(--paper);stroke-width:3px}
+.dot-family{fill:var(--family)} .dot-object{fill:var(--object)} .dot-query{fill:var(--query)} .dot-doc{fill:var(--doc)} .dot-ink{fill:var(--ink)}
+.ray{stroke-width:1.6;opacity:.55}
+.ray-family{stroke:var(--family)} .ray-object{stroke:var(--object)} .ray-doc{stroke:var(--doc)}
+.ray-query{stroke:var(--query);stroke-width:3.2;opacity:1}
+.ray-compare{stroke-width:2.6;opacity:1}
+.arc{fill:var(--query-soft);stroke:var(--query);stroke-width:1.5}
+.arclabel{fill:var(--query);font-size:13px;font-weight:600;font-family:var(--font-mono);paint-order:stroke;stroke:var(--paper);stroke-width:4px}
+.link{stroke:var(--query);stroke-width:1.5;stroke-dasharray:4 4;opacity:.8}
+.halo{fill:none;stroke:var(--query);stroke-width:2}
+.dist-line{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:3 4}
+.dist-label{fill:var(--muted);font-size:11px;font-family:var(--font-mono);paint-order:stroke;stroke:var(--paper);stroke-width:3px}
+.field-ground{fill:var(--grid)}
+.danger-ring{fill:var(--query-soft);stroke:var(--query);stroke-dasharray:4 4}
+.reach-ring{fill:var(--family-soft);stroke:var(--family);stroke-dasharray:4 4}
+
+/* ledger (글자 -> 숫자) */
+.ledger{display:grid;gap:4px;font-family:var(--font-mono);font-size:14px;font-variant-numeric:tabular-nums}
+.ledger .row{display:grid;grid-template-columns:4.5em 1.5em 1fr;align-items:center;gap:6px;padding:3px 8px;border-radius:6px}
+.ledger .row.flash{background:var(--query-soft)}
+.ledger .row .w{font-family:var(--font-body);font-weight:600}
+.ledger .row.pending{color:var(--muted);opacity:.6}
+.speech{min-height:3.2em;padding:10px 12px;border-radius:8px;background:var(--bg);font-size:15px}
+.speech .praise{color:var(--good);font-weight:600}
+
+/* rank list */
+.rank{display:grid;gap:4px}
+.rank button{display:grid;grid-template-columns:4.5em minmax(0,1fr) 4.2em;gap:10px;align-items:center;text-align:left;background:transparent;border:1px solid transparent;border-radius:6px;padding:4px 8px}
+.rank button:hover{border-color:var(--line)}
+.rank button.sel{border-color:var(--ink)}
+.rank .bar{height:10px;border-radius:5px;background:var(--grid);position:relative;overflow:hidden}
+.rank .bar i{position:absolute;inset:0 auto 0 0;border-radius:5px}
+.rank .v{font-family:var(--font-mono);font-size:14px;text-align:right;font-variant-numeric:tabular-nums}
+.rank .neg{color:var(--bad)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:5px 12px;font-size:14px}
+.seg button.on{background:var(--ink);color:var(--paper)}
+
+details{border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--paper)}
+details summary{cursor:pointer;font-weight:600;font-size:15px}
+details .inner{padding-top:8px;display:grid;gap:8px;font-size:15px}
+
+table.t{border-collapse:collapse;width:100%;font-size:14px}
+table.t th,table.t td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.t th{color:var(--muted);font-weight:500;font-size:13px}
+table.t td.num{font-family:var(--font-mono);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tablebox{overflow-x:auto}
+tr.hit td{background:var(--query-soft)}
+.tag{display:inline-block;font-size:12px;padding:0 6px;border-radius:4px;border:1px solid var(--line);color:var(--muted);margin-left:6px}
+.same{color:var(--good);font-weight:600}
+.changed{color:var(--bad);font-weight:600}
+
+.matrix{display:inline-grid;grid-template-columns:auto auto;gap:2px 14px;padding:4px 12px;border-left:2px solid var(--ink);border-right:2px solid var(--ink);font-family:var(--font-mono);font-size:15px;font-variant-numeric:tabular-nums}
+.vecline{font-family:var(--font-mono);font-size:14px;overflow-wrap:anywhere;color:var(--ink)}
+canvas.code{width:100%;height:44px;display:block;border-radius:6px;border:1px solid var(--line)}
+.barcode-row{display:grid;gap:4px}
+.barcode-row .label-row b{color:var(--ink)}
+
+.prompt{font-family:var(--font-mono);font-size:13px;white-space:pre-wrap;background:var(--bg);border:1px dashed var(--line);border-radius:8px;padding:12px;line-height:1.6;max-height:300px;overflow:auto}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:14px}
+.flow span.s{border:1px solid var(--line);border-radius:6px;padding:2px 8px;background:var(--paper)}
+.flow span.s.on{border-color:var(--query);color:var(--query);font-weight:600}
+
+/* summary + quiz */
+.chain{display:grid;gap:10px;counter-reset:c}
+.chain li{list-style:none;display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+.chain li b{font-weight:700}
+@media (max-width:560px){.chain li{grid-template-columns:minmax(0,1fr);gap:2px}}
+.chain{padding:0;margin:0}
+.quiz{display:grid;gap:18px}
+.q{display:grid;gap:8px}
+.q .opts{display:flex;flex-wrap:wrap;gap:8px}
+.q .opts button{border:1px solid var(--line);background:var(--paper);padding:6px 12px;border-radius:8px;font-size:15px;text-align:left}
+.q .opts button.right{border-color:var(--good);color:var(--good);font-weight:600}
+.q .opts button.wrong{border-color:var(--bad);color:var(--bad)}
+.q .fb{font-size:14px;color:var(--muted);min-height:1.5em}
+footer{padding-top:32px;font-size:13px;color:var(--muted);display:grid;gap:6px;max-width:52em}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <div class="eyebrow">AI 같이 공부하기 · 1편</div>
+  <h1>의미의 지도</h1>
+  <p class="lead">AI는 단어를 <b>좌표</b>로 바꿔서 기억합니다. 비슷한 뜻은 가까이, 다른 뜻은 멀리 놓습니다. 이 페이지에서는 그 지도를 직접 만들고, 지도에서 비슷한 것을 찾아봅니다. 임베딩과 유사도 검색이 바로 이 과정입니다.</p>
+  <div class="ticker" aria-label="단어가 숫자로 바뀌는 예"><span>엄마</span><span>→</span><b id="tickerVec">[ 0.35, 0.79 ]</b></div>
+  <div class="meta"><span>읽는 시간 약 15분</span><span>사전 지식 필요 없음</span><span>모든 판은 직접 누르고 끌 수 있습니다</span></div>
+</header>
+
+<nav class="toc" aria-label="장면 목차"><ol id="toc">
+  <li><a href="#s0">0 거리 감각</a></li>
+  <li><a href="#s1">1 규칙 vs 관계</a></li>
+  <li><a href="#s2">2 아기의 머릿속</a></li>
+  <li><a href="#s3">3 유사도</a></li>
+  <li><a href="#s4">4 공간을 돌려도</a></li>
+  <li><a href="#s5">5 차원 늘리기</a></li>
+  <li><a href="#s6">6 RAG 검색</a></li>
+  <li><a href="#s7">7 정리</a></li>
+</ol></nav>
+
+<!-- 0 -->
+<section class="scene" id="s0">
+  <div class="scene-head">
+    <div class="scene-no">장면 0</div>
+    <h2>지능은 거리를 아는 것에서 시작한다</h2>
+    <p>AI 이야기 전에 우리 조상 이야기부터 합니다.</p>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <p>초원에 사자와 사슴이 있습니다. 살아남으려면 사자와는 <b>멀리</b>, 사슴과는 <b>가까이</b> 있어야 합니다. 이 판단을 하려면 먼저 "지금 나는 어디쯤 있지?"를 알아야 합니다.</p>
+      <p>오른쪽 판에서 <b>나</b>를 끌어 움직여 보세요. 우리가 계속 계산하는 건 사자의 정확한 위치가 아니라 <b>나와 사자 사이의 거리</b>, 즉 상대적 위치입니다.</p>
+      <div class="quote">생각의 시작은 (상대적) 위치 감각이다. 고등 사고는 위치 감각이 추상화된 것이다.
+        <cite>문병로 교수 강연 「AI 기술의 새 사조」에서. 원래 제프 호킨스 『천 개의 뇌』의 관점입니다.</cite></div>
+      <p>위치 감각이 쌓이고 추상화되면 생각이 됩니다. "엄마는 아빠와 가깝다", "자동차는 가족과 멀다" 같은 판단도 사실은 <b>머릿속 공간에서 거리를 재는 일</b>입니다. AI도 같은 방식을 씁니다.</p>
+    </div>
+    <div class="board">
+      <svg id="savanna" class="drag" viewBox="0 0 400 240" role="img" aria-label="사자, 나, 사슴이 있는 초원. 나를 끌어서 움직일 수 있습니다."></svg>
+      <div class="status" id="savannaStatus" aria-live="polite"></div>
+      <p class="note">점선 원 안으로 들어가면 사자에게 잡히고, 초록 원 안으로 들어가면 사냥에 성공합니다.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 1 -->
+<section class="scene" id="s1">
+  <div class="scene-head">
+    <div class="scene-no">장면 1</div>
+    <h2>규칙으로 정의할까, 관계로 정의할까</h2>
+    <p>AI의 역사는 두 갈래였습니다. 지금 이긴 쪽이 관계입니다.</p>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <p><b>기호주의(1956년~)</b>는 "지능은 규칙과 논리로 이루어진다"고 봤습니다. 사람이 기준을 정하고 하나하나 값을 채웁니다. 우리가 평소에 짜는 소프트웨어도 이 방식입니다.</p>
+      <p><b>연결주의(1957년~)</b>는 "지능은 뉴런들의 연결, 즉 관계로 이루어진다"고 봤습니다. 2012년 딥러닝 이후로는 이쪽이 압도하고 있고, 2017년에 나온 <b>트랜스포머</b>는 관계를 계산하는 데 가장 철저한 구조입니다.</p>
+      <p>생각해 보면 단어 하나도 다른 단어 없이는 설명할 수 없습니다. "소"를 설명하려면 "동물", "우유", "송아지" 같은 다른 단어가 필요합니다. <b>뜻은 관계 속에서 생깁니다.</b></p>
+      <div class="def">임베딩 = 단어를 '다른 단어들과의 관계'가 담긴 좌표로 바꾸는 것<small>앞으로 이 정의를 장면마다 조금씩 다듬어 갑니다.</small></div>
+    </div>
+    <div class="board">
+      <div class="seg" role="tablist" aria-label="정의 방식">
+        <button id="tabRule" class="on" role="tab" aria-selected="true">규칙으로 정의한 '소'</button>
+        <button id="tabRel" role="tab" aria-selected="false">관계로 정의한 '소'</button>
+      </div>
+      <div id="paneRule">
+        <div class="tablebox"><table class="t">
+          <thead><tr><th>사람이 정한 기준</th><th>값</th></tr></thead>
+          <tbody>
+            <tr><td>동물인가?</td><td class="num">1</td></tr>
+            <tr><td>크기 (1~10)</td><td class="num">7</td></tr>
+            <tr><td>사나운가?</td><td class="num">0</td></tr>
+            <tr><td>먹는 것 (1 초식, 2 육식)</td><td class="num">1</td></tr>
+            <tr><td>사람과 같이 사는가?</td><td class="num">1</td></tr>
+            <tr><td>…기준을 끝없이 추가해야 함</td><td class="num">…</td></tr>
+          </tbody></table></div>
+        <p class="vecline">소 = (1, 7, 0, 1, 1, …)</p>
+        <p class="note">축의 이름과 값을 전부 사람이 정합니다. 사람이 생각하지 못한 기준은 표현할 수 없습니다. 강연의 표현으로는 "변수가 사람의 시야 안에 있다"입니다.</p>
+      </div>
+      <div id="paneRel" hidden>
+        <svg id="relSvg" viewBox="0 0 400 260" role="img" aria-label="소 주변에 송아지, 우유, 목장이 가깝게, 자동차와 미분이 멀리 놓인 그림"></svg>
+        <p class="note">'소'가 몇 번 칸에 몇이 들어가는지는 아무도 정하지 않습니다. 대신 데이터를 보며 <b>송아지·우유와는 가깝고 미분·자동차와는 먼 자리</b>를 스스로 찾아갑니다. 축은 AI가 학습하며 만듭니다. 이번에는 "변수가 사람의 시야 밖으로 나갔다"고 할 수 있습니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="scene" id="s2">
+  <div class="scene-head">
+    <div class="scene-no">장면 2</div>
+    <h2>갓난아기의 머릿속 지도</h2>
+    <p>머릿속을 x, y 두 축짜리 평면이라고 해봅시다. 이제 단어를 하나씩 배웁니다.</p>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <p><b>① 단어 배우기.</b> 처음 들은 단어는 지도 아무 곳에나 놓입니다. 놓이는 순간 단어는 <b>숫자 두 개(좌표)</b>가 됩니다. 오른쪽 아래 장부에서 글자가 숫자로 바뀌는 걸 확인하세요.</p>
+      <p><b>② 칭찬받으며 말해보기.</b> "엄마, 아빠, 가족"을 같이 말하면 부모님이 좋아합니다. 칭찬받을 때마다 <b>같이 나온 단어끼리 조금씩 가까워집니다.</b> 이게 학습입니다.</p>
+      <p><b>③ 새 단어 더 배우기.</b> 자동차, 장난감, 사물도 처음엔 아무 데나 놓이지만, 같이 쓰이는 말끼리 또 다른 무리를 만듭니다.</p>
+      <details>
+        <summary>실제 AI 학습 용어로 바꾸면</summary>
+        <div class="inner">
+          <table class="t"><tbody>
+            <tr><td>처음에 아무 데나 놓임</td><td>무작위 초기화</td></tr>
+            <tr><td>세상의 말을 엄청나게 많이 들음</td><td>사전학습 (대량의 글로 학습)</td></tr>
+            <tr><td>부모님이 칭찬하고 바로잡아 줌</td><td>사후학습 (사람의 피드백으로 다듬기)</td></tr>
+            <tr><td>회사에 와서 우리 팀 용어를 새로 익힘</td><td>파인튜닝 (특정 분야에 맞춰 추가 학습)</td></tr>
+            <tr><td>칭찬 / 꾸중</td><td>정답과의 차이(오차)를 줄이는 방향으로 좌표 수정</td></tr>
+          </tbody></table>
+          <p class="note">임베딩 모델은 실제로 "같은 뜻의 문장 쌍은 당기고, 관계없는 문장은 밀어내는" 방식(대조 학습)으로 많이 학습합니다. 아기 비유와 꽤 비슷합니다. 다만 이 판의 학습은 이해를 돕기 위해 아주 단순하게 흉내 낸 것입니다.</p>
+        </div>
+      </details>
+    </div>
+    <div class="board">
+      <svg id="babySvg" viewBox="0 0 400 400" role="img" aria-label="아기의 머릿속 2차원 지도"></svg>
+      <div class="controls">
+        <button class="btn" id="learnWord">단어 하나 배우기</button>
+        <button class="btn" id="speak">말해보기 (칭찬받기)</button>
+        <button class="btn ghost" id="speak10">10번 연속</button>
+        <button class="btn ghost" id="babyReset">처음부터</button>
+      </div>
+      <div class="status" id="babyGuide" aria-live="polite"></div>
+      <div class="speech" id="speech" aria-live="polite">아직 아무 단어도 모릅니다.</div>
+      <div class="label-row"><span>단어 → 숫자 장부</span><span>학습 횟수 <b class="mono" id="epoch">0</b></span></div>
+      <div class="ledger" id="ledger"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="scene" id="s3">
+  <div class="scene-head">
+    <div class="scene-no">장면 3</div>
+    <h2>유사도는 같은 쪽을 보는 정도다</h2>
+    <p>다 자란 지도에서 "가족과 비슷한 단어"를 찾아봅니다.</p>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <p>원점(가운데 점)에서 각 단어까지 화살표를 그어봅니다. 이 화살표가 <b>벡터</b>입니다. 좌표 = 벡터라고 생각해도 됩니다.</p>
+      <p>'가족' 화살표와 '엄마', '아빠' 화살표는 거의 같은 쪽을 봅니다. '자동차', '사물'은 다른 쪽을 봅니다. 두 화살표 사이의 각도가 작을수록 비슷한 단어입니다.</p>
+      <div class="def">코사인 유사도 = 두 화살표가 같은 쪽을 보는 정도<small>1이면 같은 방향, 0이면 관계없음, −1이면 정반대</small></div>
+      <p>왜 거리가 아니라 방향일까요? 판에서 <b>'아빠'를 화살표 방향 그대로 원점 쪽으로 끌어보세요.</b> 거리는 크게 바뀌지만 방향은 그대로여서 코사인 값은 거의 안 변합니다. 문장이 길거나 짧은 것처럼 뜻과 상관없는 차이가 화살표 길이에 섞이기 쉬워서, 실무에서는 주로 방향을 봅니다.</p>
+      <p>위의 단어 버튼으로 기준 단어를 바꿔 보세요. '사물'을 기준으로 하면 이번에는 자동차, 장난감이 위로 올라옵니다.</p>
+      <details>
+        <summary>계산식이 궁금하다면</summary>
+        <div class="inner" id="formula"></div>
+      </details>
+    </div>
+    <div class="board">
+      <div class="controls" id="simQuery" aria-label="기준 단어 고르기"></div>
+      <svg id="simSvg" class="drag" viewBox="0 0 400 400" role="img" aria-label="원점에서 각 단어로 향하는 화살표와 기준 단어와의 각도"></svg>
+      <div class="controls"><span class="note">순위 기준</span>
+        <div class="seg"><button id="modeCos" class="on">방향 (코사인)</button><button id="modeDist">직선 거리</button></div>
+        <button class="btn ghost" id="simReset">위치 되돌리기</button>
+      </div>
+      <div class="label-row"><span id="rankTitle">‘가족’과 비슷한 순서</span><span>줄을 누르면 각도를 보여줍니다</span></div>
+      <div class="rank" id="simRank"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="scene" id="s4">
+  <div class="scene-head">
+    <div class="scene-no">장면 4</div>
+    <h2>좌표값이 아니라 관계가 중요하다</h2>
+    <p>지도 전체를 돌리면 모든 숫자가 바뀝니다. 그래도 바뀌지 않는 것이 있습니다.</p>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <p>'엄마'의 좌표가 정확히 어떤 숫자인지는 중요하지 않습니다. 다른 단어들과의 <b>관계가 제대로 담겨 있는지</b>만 중요합니다.</p>
+      <p><b>회전</b> 슬라이더를 움직여 보세요. 표의 좌표는 전부 바뀌지만 유사도는 그대로입니다. <b>늘이기</b>도 마찬가지입니다.</p>
+      <p>이렇게 공간 전체를 옮기는 계산이 <b>행렬 곱셈</b>입니다. 판 아래 2×2 행렬이 그 계산입니다. 신경망은 이런 공간 이동을 수십, 수백 겹 쌓아서 단어를 점점 쓸모 있는 공간으로 옮깁니다. 행렬 곱셈을 빠르게 하는 장치가 GPU이고, AI에 GPU가 필요한 이유가 이것입니다.</p>
+      <p>마지막으로 <b>비틀기</b>를 움직여 보세요. 이번에는 유사도가 바뀝니다. 행렬에 따라 관계가 무너지기도 하고 더 잘 드러나기도 합니다. <b>학습이란 관계가 잘 드러나는 행렬 값을 찾아가는 과정</b>입니다.</p>
+    </div>
+    <div class="board">
+      <svg id="rotSvg" viewBox="0 0 400 400" role="img" aria-label="회전, 늘이기, 비틀기로 변환한 단어 지도"></svg>
+      <div class="slider"><label for="rot">회전 <span class="mono" id="rotV">0°</span></label><input type="range" id="rot" min="0" max="360" value="0"></div>
+      <div class="slider"><label for="stretch">늘이기 <span class="mono" id="stretchV">×1.00</span></label><input type="range" id="stretch" min="50" max="130" value="100"></div>
+      <div class="slider"><label for="shear">비틀기 <span class="mono" id="shearV">0.00</span></label><input type="range" id="shear" min="-100" max="100" value="0"></div>
+      <div class="controls"><span class="note">지금 곱한 행렬</span><div class="matrix" id="matrix"></div><button class="btn ghost" id="rotReset">되돌리기</button></div>
+      <div class="tablebox"><table class="t" id="rotTable"></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="scene" id="s5">
+  <div class="scene-head">
+    <div class="scene-no">장면 5</div>
+    <h2>2차원은 그림자다</h2>
+    <p>지금까지는 x, y 두 칸이었습니다. 실제 임베딩은 수백~수천 칸입니다.</p>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <p>두 칸으로는 "엄마는 가족이면서 여자이고 어른이고 나를 돌봐주는 사람"이라는 관계를 다 담을 수 없습니다. 칸(차원)을 늘리면 담을 수 있는 관계가 풍부해집니다. 대신 계산이 무거워집니다.</p>
+      <p>요즘 임베딩 모델은 단어나 문장 하나를 보통 <b>768개, 1024개, 많게는 3000개 넘는 숫자</b>로 바꿉니다. 각 칸에는 이름이 없습니다. 장면 1의 "크기", "사나운가?"처럼 사람이 붙인 기준이 아니라, AI가 학습하면서 스스로 만든 축입니다.</p>
+      <p>차원이 많아도 계산법은 같습니다. 화살표 두 개의 방향을 비교하면 됩니다. 오른쪽에서 768차원으로 바꿔 보세요. 엄마와 아빠는 줄무늬 패턴이 닮았고, 자동차는 다릅니다.</p>
+      <div class="def">임베딩 = 단어나 문장을 수백~수천 개의 숫자(좌표)로 바꿔, 의미 공간의 한 점에 놓는 것</div>
+      <p class="note">우리가 보는 2D 지도는 수백 차원 공간을 평면에 비춘 그림자입니다. 그래서 지도에서 가까워 보여도 실제로는 멀 수 있고, 그 반대도 있습니다. 장면 6에서 직접 확인합니다.</p>
+    </div>
+    <div class="board">
+      <div class="controls"><span class="note">차원 수</span>
+        <div class="seg" id="dimSeg"><button data-d="2" class="on">2</button><button data-d="3">3</button><button data-d="768">768</button><button data-d="1024">1024</button></div>
+      </div>
+      <div class="barcode-row"><div class="label-row"><b>엄마</b><span class="mono" id="dimN1"></span></div><canvas class="code" id="bc0"></canvas><div class="vecline" id="vec0"></div></div>
+      <div class="barcode-row"><div class="label-row"><b>아빠</b><span></span></div><canvas class="code" id="bc1"></canvas><div class="vecline" id="vec1"></div></div>
+      <div class="barcode-row"><div class="label-row"><b>자동차</b><span></span></div><canvas class="code" id="bc2"></canvas><div class="vecline" id="vec2"></div></div>
+      <div class="tablebox"><table class="t"><thead><tr><th>비교</th><th style="text-align:right">코사인 유사도</th></tr></thead>
+        <tbody><tr><td>엄마 ↔ 아빠</td><td class="num" id="dimCos1"></td></tr><tr><td>엄마 ↔ 자동차</td><td class="num" id="dimCos2"></td></tr></tbody></table></div>
+      <p class="note">줄 하나가 숫자 한 칸입니다. 색이 진할수록 절댓값이 크고, 색은 부호(+/−)를 뜻합니다. 768·1024차원 값은 설명용으로 만든 가짜 값입니다.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="scene" id="s6">
+  <div class="scene-head">
+    <div class="scene-no">장면 6</div>
+    <h2>RAG: 질문과 같은 쪽을 보는 문서를 찾아 LLM에게 건넨다</h2>
+    <p>지금까지 한 일이 그대로 사내 문서 검색이 됩니다. 단어 대신 문서를 지도에 놓으면 됩니다.</p>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <div class="flow" id="ragFlow">
+        <span class="s">① 문서들을 미리 임베딩해 저장</span><span>→</span>
+        <span class="s">② 질문도 임베딩</span><span>→</span>
+        <span class="s">③ 코사인 유사도로 가까운 문서 k개</span><span>→</span>
+        <span class="s">④ 문서 + 질문을 LLM에 전달</span>
+      </div>
+      <p>오른쪽에서 질문을 골라 보세요. 질문이 지도 위의 한 점(주황)이 되고, 그 점과 같은 쪽을 보는 문서가 위로 올라옵니다.</p>
+      <p><b>"받는 메시지 길이 제한은 어디서 바꿔요?"</b>를 눌러 보세요. 문서에는 "메시지"라는 단어가 없고 "전문"이라고 써 있는데도 찾아냅니다. 글자가 아니라 <b>뜻</b>으로 찾기 때문입니다.</p>
+      <p>이번에는 <b>"E-4012 에러가 떠요"</b>를 눌러 보세요. 정답 문서는 에러코드 문서인데, 임베딩만으로는 비슷한 오류 문서들에 밀립니다. 에러코드나 설정 키 이름처럼 <b>글자가 정확히 맞아야 하는 검색</b>에는 임베딩이 약합니다. 그래서 실무에서는 키워드 검색을 함께 섞습니다(하이브리드 검색). 체크박스를 켜서 순위가 어떻게 바뀌는지 보세요.</p>
+      <div class="def">유사도 검색 = 질문 화살표와 같은 쪽을 보는 문서 화살표 찾기<small>RAG = 그렇게 찾은 문서를 LLM에게 쥐여주고 그걸 근거로 답하게 하는 것</small></div>
+      <p class="note">이 판의 문서는 가상의 예시이고, 벡터도 이해하기 쉽게 이름 붙인 7개 칸으로 직접 만든 값입니다. 지도는 7차원을 2차원으로 눌러 그린 그림자라서, 지도에서 보이는 거리와 표의 순위가 다를 수 있습니다. 순위는 항상 표가 맞습니다.</p>
+    </div>
+    <div class="board">
+      <div class="controls" id="ragQuery" aria-label="질문 고르기"></div>
+      <svg id="ragSvg" viewBox="0 0 400 400" role="img" aria-label="문서들과 질문이 놓인 의미 지도"></svg>
+      <div class="vecline" id="ragVec"></div>
+      <div class="slider"><label for="topk">LLM에 넘길 문서 수 (top-k) <span class="mono" id="topkV">2</span></label><input type="range" id="topk" min="1" max="4" value="2"></div>
+      <label class="controls" style="gap:6px;font-size:15px"><input type="checkbox" id="hybrid"> 키워드 검색도 섞기 (질문의 단어가 문서에 그대로 있으면 +0.30점)</label>
+      <div class="tablebox"><table class="t" id="ragTable"></table></div>
+      <div class="label-row"><span>LLM에게 실제로 전달되는 내용</span><span></span></div>
+      <div class="prompt" id="ragPrompt"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="scene" id="s7">
+  <div class="scene-head">
+    <div class="scene-no">장면 7</div>
+    <h2>한 줄씩 다시 정의하기</h2>
+    <p>오늘 다룬 단어들을 짧은 문장으로 정리합니다.</p>
+  </div>
+  <div class="cols">
+    <ol class="chain">
+      <li><b>지능의 시작</b><span>거리를 아는 것. 생각은 상대적 위치 감각이 추상화된 것입니다.</span></li>
+      <li><b>임베딩</b><span>단어나 문장을 의미가 담긴 좌표(숫자 묶음)로 바꾸는 것.</span></li>
+      <li><b>학습</b><span>관계가 잘 드러나도록 좌표를 조금씩 고쳐 놓는 것. 공간을 옮기는 도구가 행렬 곱셈입니다.</span></li>
+      <li><b>벡터</b><span>원점에서 그 좌표까지 그은 화살표.</span></li>
+      <li><b>코사인 유사도</b><span>두 화살표가 같은 쪽을 보는 정도. 1에 가까울수록 비슷합니다.</span></li>
+      <li><b>차원</b><span>좌표의 칸 수. 많을수록 관계를 풍부하게 담고 계산은 무거워집니다.</span></li>
+      <li><b>유사도 검색</b><span>질문 화살표와 같은 쪽을 보는 문서를 찾는 것.</span></li>
+      <li><b>RAG</b><span>찾은 문서를 LLM에게 건네고, 그 문서를 근거로 답하게 하는 것.</span></li>
+    </ol>
+    <div class="board quiz" id="quiz">
+      <div class="label-row"><b style="color:var(--ink)">확인 문제 3개</b><span id="quizScore"></span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>참고: 문병로 교수 강연 「AI 기술의 새 사조」(삼성 청년 SW·AI 아카데미). 강연의 관점(관계 추구, 공간 변환으로서의 행렬 곱, 좌표값보다 관계)을 바탕으로 판을 새로 만들었습니다. 강연 슬라이드는 포함하지 않았습니다.</p>
+  <p>이 페이지의 모든 숫자와 문서는 설명을 위한 예시입니다. 실제 임베딩 모델의 값이 아닙니다.</p>
+  <p>다음 편 예고: 트랜스포머 어텐션, 문장 속 단어들이 서로의 좌표를 고쳐 주는 방법.</p>
+</footer>
+</div>
+
+<script>
+(() => {
+'use strict';
+const NS = 'http://www.w3.org/2000/svg';
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const txt = (parent, x, y, s, cls, extra = {}) => { const t = el('text', Object.assign({ x, y, class: cls }, extra), parent); t.textContent = s; return t; };
+const clear = g => { while (g.firstChild) g.removeChild(g.firstChild); };
+const dot = (a, b) => a.reduce((s, v, i) => s + v * b[i], 0);
+const norm = a => Math.sqrt(dot(a, a));
+const cosSim = (a, b) => { const n = norm(a) * norm(b); return n ? dot(a, b) / n : 0; };
+const dist = (a, b) => Math.hypot(...a.map((v, i) => v - b[i]));
+const num = (v, d = 2) => (v < 0 ? '−' : '') + Math.abs(v).toFixed(d);
+const vec = (a, d = 2) => '[ ' + a.map(v => num(v, d)).join(', ') + ' ]';
+const polar = (deg, r) => [r * Math.cos(deg * Math.PI / 180), r * Math.sin(deg * Math.PI / 180)];
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+function svgPoint(svg, evt) {
+  const pt = svg.createSVGPoint(); pt.x = evt.clientX; pt.y = evt.clientY;
+  const p = pt.matrixTransform(svg.getScreenCTM().inverse()); return [p.x, p.y];
+}
+
+function Plane(svg, { R = 1.15, grid = true } = {}) {
+  const g = { grid: el('g', {}, svg), under: el('g', {}, svg), rays: el('g', {}, svg), over: el('g', {}, svg), pts: el('g', {}, svg) };
+  const S = 185;
+  const toPx = ([x, y]) => [200 + x / R * S, 200 - y / R * S];
+  const fromPx = ([px, py]) => [(px - 200) / S * R, -(py - 200) / S * R];
+  if (grid) {
+    for (let i = -4; i <= 4; i++) {
+      const v = i * 0.25; const [a] = toPx([v, 0]); const [, b] = toPx([0, v]);
+      el('line', { x1: a, y1: 15, x2: a, y2: 385, class: 'gridline' }, g.grid);
+      el('line', { x1: 15, y1: b, x2: 385, y2: b, class: 'gridline' }, g.grid);
+    }
+    el('line', { x1: 15, y1: 200, x2: 385, y2: 200, class: 'axis' }, g.grid);
+    el('line', { x1: 200, y1: 15, x2: 200, y2: 385, class: 'axis' }, g.grid);
+    txt(g.grid, 382, 192, 'x', 'axislabel', { 'text-anchor': 'end' });
+    txt(g.grid, 207, 27, 'y', 'axislabel');
+    const [p1] = toPx([1, 0]); txt(g.grid, p1, 214, '1', 'axislabel', { 'text-anchor': 'middle' });
+    const [, q1] = toPx([0, 1]); txt(g.grid, 190, q1 + 4, '1', 'axislabel', { 'text-anchor': 'end' });
+    el('circle', { cx: 200, cy: 200, r: 3.5, class: 'origin' }, g.grid);
+  }
+  return { svg, g, toPx, fromPx, R };
+}
+
+function drawPoint(plane, p, name, cls, { coords = false, r = 7, labelDy = -12 } = {}) {
+  if (!plane.g.pts.firstChild) plane.labels = [];
+  const [x, y] = plane.toPx(p);
+  el('circle', { cx: x, cy: y, r, class: cls }, plane.g.pts);
+  // 이름표 겹침 피하기: 위 → 오른쪽 → 왼쪽 → 아래 순서로 빈 자리를 찾는다
+  const w = [...name].reduce((s, ch) => s + (ch.charCodeAt(0) > 255 ? 15 : 9), 0), h = 16;
+  const cands = [[0, labelDy, 'middle'], [r + 5, 5, 'start'], [-r - 5, 5, 'end'], [0, 24, 'middle']];
+  const box = ([dx, dy, a]) => { const x0 = a === 'middle' ? x + dx - w / 2 : a === 'start' ? x + dx : x + dx - w; return [x0, y + dy - 12, x0 + w, y + dy - 12 + h]; };
+  const hit = b => plane.labels.some(o => !(b[2] < o[0] || b[0] > o[2] || b[3] < o[1] || b[1] > o[3]));
+  let pick = cands[0];
+  for (const c of cands) { if (!hit(box(c))) { pick = c; break; } }
+  plane.labels.push(box(pick), [x - r, y - r, x + r, y + r]);
+  txt(plane.g.pts, x + pick[0], y + pick[1], name, 'wlabel', { 'text-anchor': pick[2] });
+  if (coords) txt(plane.g.pts, x, y + (pick[1] > 0 ? 40 : 22), vec(p), 'wcoord', { 'text-anchor': 'middle' });
+}
+function drawArrow(plane, p, cls) {
+  const [x, y] = plane.toPx(p);
+  el('line', { x1: 200, y1: 200, x2: x, y2: y, class: 'ray ' + cls }, plane.g.rays);
+}
+function drawArc(plane, a, b, r = 46) {
+  const angA = Math.atan2(a[1], a[0]), angB = Math.atan2(b[1], b[0]);
+  let d = angB - angA; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+  const p0 = [200 + r * Math.cos(angA), 200 - r * Math.sin(angA)];
+  const p1 = [200 + r * Math.cos(angA + d), 200 - r * Math.sin(angA + d)];
+  const sweep = d > 0 ? 0 : 1;
+  el('path', { d: `M200 200 L${p0[0]} ${p0[1]} A${r} ${r} 0 0 ${sweep} ${p1[0]} ${p1[1]} Z`, class: 'arc' }, plane.g.under);
+  const mid = angA + d / 2, lr = r + 18;
+  txt(plane.g.over, 200 + lr * Math.cos(mid), 204 - lr * Math.sin(mid), Math.round(Math.abs(d) * 180 / Math.PI) + '°', 'arclabel', { 'text-anchor': 'middle' });
+}
+
+// generic drag on plane: items = () => [{name, p}], onMove(name, newP)
+function enableDrag(plane, items, onMove, { hit = 22, clamp = 1.1 } = {}) {
+  const svg = plane.svg; let drag = null;
+  svg.addEventListener('pointerdown', e => {
+    const [px, py] = svgPoint(svg, e); let best = null, bd = hit;
+    for (const it of items()) { const [x, y] = plane.toPx(it.p); const d = Math.hypot(x - px, y - py); if (d < bd) { bd = d; best = it.name; } }
+    if (best) { drag = best; svg.setPointerCapture(e.pointerId); e.preventDefault(); }
+  });
+  svg.addEventListener('pointermove', e => {
+    if (!drag) return; const p = plane.fromPx(svgPoint(svg, e));
+    onMove(drag, p.map(v => Math.max(-clamp, Math.min(clamp, v))));
+  });
+  const end = () => { drag = null; };
+  svg.addEventListener('pointerup', end); svg.addEventListener('pointercancel', end);
+}
+
+/* ---------- 공통 단어 세트 ---------- */
+const WORDS = [
+  { name: '엄마', group: 'family', target: polar(76, 0.8), start: [-0.62, -0.34] },
+  { name: '아빠', group: 'family', target: polar(40, 0.78), start: [0.72, -0.58] },
+  { name: '가족', group: 'family', target: polar(58, 1.0), start: [-0.18, 0.62] },
+  { name: '자동차', group: 'object', target: polar(-56, 0.8), start: [-0.74, 0.38] },
+  { name: '장난감', group: 'object', target: polar(-16, 0.78), start: [0.1, -0.86] },
+  { name: '사물', group: 'object', target: polar(-36, 1.0), start: [0.84, 0.3] },
+];
+$('#tickerVec').textContent = vec(WORDS[0].target);
+
+/* ---------- 장면 0: 초원 ---------- */
+(() => {
+  const svg = $('#savanna');
+  const lion = [70, 120], prey = [330, 120]; let me = [200, 170];
+  const LION_R = 70, PREY_R = 42;
+  function render() {
+    clear(svg);
+    el('rect', { x: 0, y: 0, width: 400, height: 240, rx: 8, class: 'field-ground' }, svg);
+    el('circle', { cx: lion[0], cy: lion[1], r: LION_R, class: 'danger-ring' }, svg);
+    el('circle', { cx: prey[0], cy: prey[1], r: PREY_R, class: 'reach-ring' }, svg);
+    el('line', { x1: me[0], y1: me[1], x2: lion[0], y2: lion[1], class: 'dist-line' }, svg);
+    el('line', { x1: me[0], y1: me[1], x2: prey[0], y2: prey[1], class: 'dist-line' }, svg);
+    const dl = Math.hypot(me[0] - lion[0], me[1] - lion[1]), dp = Math.hypot(me[0] - prey[0], me[1] - prey[1]);
+    txt(svg, (me[0] + lion[0]) / 2, (me[1] + lion[1]) / 2 - 6, (dl / 40).toFixed(1) + 'm', 'dist-label', { 'text-anchor': 'middle' });
+    txt(svg, (me[0] + prey[0]) / 2, (me[1] + prey[1]) / 2 - 6, (dp / 40).toFixed(1) + 'm', 'dist-label', { 'text-anchor': 'middle' });
+    el('circle', { cx: lion[0], cy: lion[1], r: 10, class: 'dot-query' }, svg); txt(svg, lion[0], lion[1] - 16, '사자', 'wlabel', { 'text-anchor': 'middle' });
+    el('circle', { cx: prey[0], cy: prey[1], r: 8, class: 'dot-family' }, svg); txt(svg, prey[0], prey[1] - 14, '사슴', 'wlabel', { 'text-anchor': 'middle' });
+    el('circle', { cx: me[0], cy: me[1], r: 11, class: 'dot-ink' }, svg); txt(svg, me[0], me[1] - 17, '나', 'wlabel', { 'text-anchor': 'middle' });
+    let s;
+    if (dl < LION_R) s = '<b style="color:var(--bad)">잡혔습니다.</b> 거리 감각이 없으면 살아남지 못합니다.';
+    else if (dp < PREY_R) s = '<b style="color:var(--good)">사냥 성공.</b> 사슴과의 거리를 잘 좁혔습니다.';
+    else if (dl < LION_R + 40) s = '사자와 <b>' + (dl / 40).toFixed(1) + 'm</b>. 위험합니다. 멀어지세요.';
+    else s = '사자와 ' + (dl / 40).toFixed(1) + 'm, 사슴과 ' + (dp / 40).toFixed(1) + 'm. 나를 끌어서 움직여 보세요.';
+    $('#savannaStatus').innerHTML = s;
+  }
+  let drag = false;
+  svg.addEventListener('pointerdown', e => { const p = svgPoint(svg, e); if (Math.hypot(p[0] - me[0], p[1] - me[1]) < 28) { drag = true; svg.setPointerCapture(e.pointerId); e.preventDefault(); } });
+  svg.addEventListener('pointermove', e => { if (!drag) return; const p = svgPoint(svg, e); me = [Math.max(12, Math.min(388, p[0])), Math.max(12, Math.min(228, p[1]))]; render(); });
+  svg.addEventListener('pointerup', () => drag = false); svg.addEventListener('pointercancel', () => drag = false);
+  render();
+})();
+
+/* ---------- 장면 1: 규칙 vs 관계 ---------- */
+(() => {
+  const tR = $('#tabRule'), tL = $('#tabRel');
+  const set = rel => { tR.classList.toggle('on', !rel); tL.classList.toggle('on', rel); tR.setAttribute('aria-selected', !rel); tL.setAttribute('aria-selected', rel); $('#paneRule').hidden = rel; $('#paneRel').hidden = !rel; };
+  tR.onclick = () => set(false); tL.onclick = () => set(true);
+  const svg = $('#relSvg'); const c = [200, 130];
+  const near = [['송아지', 150, 0.55], ['우유', 30, 0.6], ['목장', 270, 0.5], ['풀', 210, 0.62]];
+  const far = [['미분', 340, 1], ['자동차', 120, 1]];
+  for (const [n, a, r] of [...near, ...far]) {
+    const rr = r * 110, x = c[0] + rr * Math.cos(a * Math.PI / 180) * 1.5, y = c[1] - rr * Math.sin(a * Math.PI / 180) * 0.95;
+    el('line', { x1: c[0], y1: c[1], x2: x, y2: y, class: r < 0.8 ? 'link' : 'dist-line' }, svg);
+    el('circle', { cx: x, cy: y, r: 6, class: r < 0.8 ? 'dot-family' : 'dot-object' }, svg);
+    txt(svg, x, y - 11, n, 'wlabel', { 'text-anchor': 'middle' });
+  }
+  el('circle', { cx: c[0], cy: c[1], r: 10, class: 'dot-query' }, svg);
+  txt(svg, c[0], c[1] - 16, '소', 'wlabel', { 'text-anchor': 'middle' });
+})();
+
+/* ---------- 장면 2: 아기의 머릿속 ---------- */
+(() => {
+  const plane = Plane($('#babySvg'));
+  const SENTENCES = [
+    { text: '“엄마! 아빠!” 둘 다 부르니 둘 다 웃는다', words: ['엄마', '아빠'] },
+    { text: '“우리 가족은 엄마랑 아빠야”', words: ['가족', '엄마', '아빠'] },
+    { text: '“엄마도 가족, 아빠도 가족”', words: ['가족', '엄마', '아빠'] },
+    { text: '“자동차 장난감 가지고 놀자”', words: ['자동차', '장난감'] },
+    { text: '“장난감은 물건, 그러니까 사물이야”', words: ['장난감', '사물'] },
+    { text: '“자동차도 사물이야”', words: ['자동차', '사물'] },
+  ];
+  let state, anim = null;
+  function reset() {
+    state = { words: WORDS.map(w => ({ ...w, pos: null, born: false })), epoch: 0, active: [], flash: null };
+    $('#speech').textContent = '아직 아무 단어도 모릅니다.';
+    render();
+  }
+  const born = () => state.words.filter(w => w.born);
+  const err = ws => ws.length ? Math.max(...ws.map(w => dist(w.pos, w.target))) : 1;
+  function render() {
+    clear(plane.g.pts); clear(plane.g.under); clear(plane.g.rays);
+    const by = n => state.words.find(w => w.name === n);
+    if (state.active.length > 1) {
+      for (let i = 0; i < state.active.length; i++) for (let j = i + 1; j < state.active.length; j++) {
+        const a = plane.toPx(by(state.active[i]).pos), b = plane.toPx(by(state.active[j]).pos);
+        el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], class: 'link' }, plane.g.under);
+      }
+    }
+    for (const w of born()) {
+      if (state.active.includes(w.name)) { const [x, y] = plane.toPx(w.pos); el('circle', { cx: x, cy: y, r: 13, class: 'halo' }, plane.g.under); }
+      drawPoint(plane, w.pos, w.name, 'dot-' + w.group, { coords: true });
+    }
+    const L = $('#ledger'); L.innerHTML = '';
+    for (const w of state.words) {
+      const row = document.createElement('div');
+      row.className = 'row' + (w.born ? '' : ' pending') + (state.flash === w.name || state.active.includes(w.name) ? ' flash' : '');
+      row.innerHTML = `<span class="w" style="color:var(--${w.born ? w.group : 'muted'})">${w.name}</span><span>→</span><span>${w.born ? vec(w.pos) : '아직 모름'}</span>`;
+      L.appendChild(row);
+    }
+    $('#epoch').textContent = state.epoch;
+    const n = born().length, e = err(born());
+    const lw = $('#learnWord'); lw.disabled = n >= 6 || !!anim; lw.textContent = n >= 6 ? '모든 단어를 배웠어요' : `단어 하나 배우기 (${n}/6)`;
+    $('#speak').disabled = n < 2 || !!anim; $('#speak10').disabled = n < 2 || !!anim;
+    let g;
+    if (n === 0) g = '먼저 <b>단어 하나 배우기</b>를 세 번 눌러 엄마, 아빠, 가족을 배워보세요.';
+    else if (n < 3) g = '방금 배운 단어는 아무 데나 놓였습니다. 계속 배워보세요.';
+    else if (n === 3 && e > 0.06) g = '이제 <b>말해보기</b>를 눌러보세요. 같이 나온 단어끼리 가까워집니다.';
+    else if (n === 3) g = '가족 단어들이 한쪽에 모였습니다. 이제 <b>새 단어</b>(자동차, 장난감, 사물)를 배워보세요.';
+    else if (n < 6) g = '새 단어도 처음엔 아무 데나 놓입니다. 끝까지 배워보세요.';
+    else if (e > 0.06) g = '<b>말해보기</b>로 다시 학습시켜 보세요. 사물 쪽 무리가 생깁니다.';
+    else g = '<span class="praise" style="color:var(--good);font-weight:600">완성.</span> 가족 무리와 사물 무리로 나뉘었습니다. 다음 장면에서 이 둘을 비교합니다.';
+    $('#babyGuide').innerHTML = g;
+  }
+  function tween(moves, done) {
+    const from = moves.map(m => m.w.pos.slice()), dur = reduced ? 0 : 450, t0 = performance.now();
+    anim = true;
+    const step = t => {
+      const k = dur ? Math.min(1, (t - t0) / dur) : 1, e = 1 - Math.pow(1 - k, 3);
+      moves.forEach((m, i) => { m.w.pos = [from[i][0] + (m.to[0] - from[i][0]) * e, from[i][1] + (m.to[1] - from[i][1]) * e]; });
+      render();
+      if (k < 1) requestAnimationFrame(step); else { anim = null; render(); done && done(); }
+    };
+    requestAnimationFrame(step);
+  }
+  $('#learnWord').onclick = () => {
+    const w = state.words.find(w => !w.born); if (!w) return;
+    w.born = true; w.pos = w.start.slice(); state.flash = w.name; state.active = [];
+    $('#speech').innerHTML = `새 단어 <b>${w.name}</b>를 들었습니다. 지도 아무 곳, <span class="mono">${vec(w.pos)}</span>에 놓였습니다. 이제 ‘${w.name}’는 숫자 두 개입니다.`;
+    render();
+  };
+  function speakOnce(done) {
+    const names = born().map(w => w.name);
+    const ok = SENTENCES.filter(s => s.words.every(n => names.includes(n)));
+    if (!ok.length) return done && done();
+    const by = n => state.words.find(w => w.name === n);
+    ok.sort((a, b) => err(b.words.map(by)) - err(a.words.map(by)));
+    const s = Math.random() < 0.75 ? ok[0] : ok[Math.floor(Math.random() * ok.length)];
+    const ws = s.words.map(by);
+    const cx = ws.reduce((a, w) => a + w.pos[0], 0) / ws.length, cy = ws.reduce((a, w) => a + w.pos[1], 0) / ws.length;
+    const moves = ws.map(w => {
+      const tx = w.pos[0] + 0.34 * (w.target[0] - w.pos[0]) + 0.08 * (cx - w.pos[0]);
+      const ty = w.pos[1] + 0.34 * (w.target[1] - w.pos[1]) + 0.08 * (cy - w.pos[1]);
+      return { w, to: [tx, ty] };
+    });
+    state.epoch++; state.active = s.words; state.flash = null;
+    const settled = err(ws) < 0.06;
+    $('#speech').innerHTML = `${s.text} <span class="praise">${settled ? '이미 잘 알고 있어요.' : '칭찬받았다! 같이 나온 단어끼리 가까워집니다.'}</span>`;
+    tween(moves, done);
+  }
+  $('#speak').onclick = () => speakOnce();
+  $('#speak10').onclick = () => { let i = 0; const next = () => { if (++i <= 10) speakOnce(next); }; next(); };
+  $('#babyReset').onclick = reset;
+  reset();
+})();
+
+/* ---------- 장면 3: 유사도 ---------- */
+(() => {
+  const plane = Plane($('#simSvg'));
+  let pts, query = '가족', compare = null, mode = 'cos';
+  const resetPts = () => { pts = WORDS.map(w => ({ name: w.name, group: w.group, p: w.target.slice() })); };
+  resetPts();
+  const qbox = $('#simQuery');
+  for (const w of WORDS) {
+    const b = document.createElement('button'); b.className = 'chip'; b.textContent = w.name; b.dataset.name = w.name; b.dataset.group = w.group;
+    b.onclick = () => { query = w.name; compare = null; render(); }; qbox.appendChild(b);
+  }
+  $('#modeCos').onclick = () => { mode = 'cos'; render(); };
+  $('#modeDist').onclick = () => { mode = 'dist'; render(); };
+  $('#simReset').onclick = () => { resetPts(); render(); };
+  enableDrag(plane, () => pts, (name, p) => { if (Math.hypot(...p) < 0.06) return; pts.find(x => x.name === name).p = p; render(); });
+  function render() {
+    for (const b of qbox.children) b.classList.toggle('on', b.dataset.name === query);
+    $('#modeCos').classList.toggle('on', mode === 'cos'); $('#modeDist').classList.toggle('on', mode === 'dist');
+    const q = pts.find(x => x.name === query);
+    const others = pts.filter(x => x.name !== query).map(x => ({ ...x, c: cosSim(q.p, x.p), d: dist(q.p, x.p) }));
+    others.sort((a, b) => mode === 'cos' ? b.c - a.c : a.d - b.d);
+    if (!compare || compare === query) compare = others[0].name;
+    const cmp = others.find(x => x.name === compare);
+    clear(plane.g.pts); clear(plane.g.rays); clear(plane.g.under); clear(plane.g.over);
+    for (const x of others) { const ln = el('line', {}, plane.g.rays); const [px, py] = plane.toPx(x.p); Object.entries({ x1: 200, y1: 200, x2: px, y2: py, class: 'ray ray-' + x.group + (x.name === compare ? ' ray-compare' : '') }).forEach(([k, v]) => ln.setAttribute(k, v)); }
+    drawArrow(plane, q.p, 'ray-query');
+    if (mode === 'cos') drawArc(plane, q.p, cmp.p);
+    else for (const x of others) {
+      const a = plane.toPx(q.p), b = plane.toPx(x.p);
+      el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], class: 'dist-line' }, plane.g.under);
+      txt(plane.g.over, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - 4, x.d.toFixed(2), 'dist-label', { 'text-anchor': 'middle' });
+    }
+    for (const x of pts) drawPoint(plane, x.p, x.name, x.name === query ? 'dot-query' : 'dot-' + x.group);
+    $('#rankTitle').textContent = `‘${query}’와 ${mode === 'cos' ? '방향이 비슷한' : '거리가 가까운'} 순서`;
+    const R = $('#simRank'); R.innerHTML = '';
+    for (const x of others) {
+      const b = document.createElement('button'); if (x.name === compare) b.className = 'sel';
+      const val = mode === 'cos' ? x.c : x.d;
+      const w = mode === 'cos' ? Math.max(0, x.c) * 100 : Math.max(0, 1 - x.d / 2.2) * 100;
+      b.innerHTML = `<span style="font-weight:600;color:var(--${x.group})">${x.name}</span><span class="bar"><i style="width:${w}%;background:var(--${x.group})"></i></span><span class="v ${mode === 'cos' && val < 0 ? 'neg' : ''}">${num(val)}</span>`;
+      b.onclick = () => { compare = x.name; render(); };
+      R.appendChild(b);
+    }
+    const a = q.p, bb = cmp.p;
+    $('#formula').innerHTML = `
+      <p>‘${query}’ = <span class="mono">${vec(a)}</span>, ‘${cmp.name}’ = <span class="mono">${vec(bb)}</span></p>
+      <p>① 곱해서 더하기(내적): <span class="mono">${num(a[0])}×${num(bb[0])} + ${num(a[1])}×${num(bb[1])} = ${num(dot(a, bb), 3)}</span></p>
+      <p>② 각 화살표 길이: <span class="mono">${norm(a).toFixed(3)}</span>, <span class="mono">${norm(bb).toFixed(3)}</span></p>
+      <p>③ 내적 ÷ (길이 × 길이) = <b class="mono">${num(cosSim(a, bb), 3)}</b>. 길이로 나누기 때문에 화살표가 길든 짧든 방향만 남습니다.</p>`;
+  }
+  render();
+})();
+
+/* ---------- 장면 4: 회전·늘이기·비틀기 ---------- */
+(() => {
+  const plane = Plane($('#rotSvg'), { R: 1.5 });
+  const base = WORDS.map(w => ({ name: w.name, group: w.group, p: w.target.slice() }));
+  const by = n => base.find(x => x.name === n);
+  const pairs = [['가족', '아빠'], ['가족', '자동차'], ['사물', '장난감']];
+  const orig = pairs.map(([a, b]) => cosSim(by(a).p, by(b).p));
+  function M() {
+    const th = +$('#rot').value * Math.PI / 180, s = +$('#stretch').value / 100, k = +$('#shear').value / 100;
+    const c = Math.cos(th), sn = Math.sin(th);
+    // M = Rot · Scale · Shear(x += k*y)
+    return [[s * c, s * (c * k - sn)], [s * sn, s * (sn * k + c)]];
+  }
+  const apply = (m, p) => [m[0][0] * p[0] + m[0][1] * p[1], m[1][0] * p[0] + m[1][1] * p[1]];
+  function render() {
+    const m = M();
+    $('#rotV').textContent = $('#rot').value + '°';
+    $('#stretchV').textContent = '×' + (+$('#stretch').value / 100).toFixed(2);
+    $('#shearV').textContent = num(+$('#shear').value / 100);
+    $('#matrix').innerHTML = m.flat().map(v => `<span>${num(v)}</span>`).join('');
+    clear(plane.g.pts); clear(plane.g.rays);
+    const moved = base.map(x => ({ ...x, q: apply(m, x.p) }));
+    for (const x of moved) { drawArrow(plane, x.q, 'ray-' + x.group); drawPoint(plane, x.q, x.name, 'dot-' + x.group); }
+    const mv = n => moved.find(x => x.name === n).q;
+    let h = '<thead><tr><th>단어</th><th>원래 좌표</th><th>지금 좌표</th></tr></thead><tbody>';
+    for (const n of ['엄마', '가족', '자동차']) h += `<tr><td>${n}</td><td class="num">${vec(by(n).p)}</td><td class="num">${vec(mv(n))}</td></tr>`;
+    h += '</tbody><thead><tr><th>유사도</th><th>원래</th><th>지금</th></tr></thead><tbody>';
+    pairs.forEach(([a, b], i) => {
+      const now = cosSim(mv(a), mv(b)), same = Math.abs(now - orig[i]) < 0.005;
+      h += `<tr><td>${a} ↔ ${b}</td><td class="num">${num(orig[i])}</td><td class="num">${num(now)} <span class="${same ? 'same' : 'changed'}">${same ? '그대로' : '바뀜'}</span></td></tr>`;
+    });
+    $('#rotTable').innerHTML = h + '</tbody>';
+  }
+  ['#rot', '#stretch', '#shear'].forEach(s => $(s).addEventListener('input', render));
+  $('#rotReset').onclick = () => { $('#rot').value = 0; $('#stretch').value = 100; $('#shear').value = 0; render(); };
+  render();
+})();
+
+/* ---------- 장면 5: 차원 ---------- */
+(() => {
+  function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function gauss(r) { let u = 0, v = 0; while (!u) u = r(); while (!v) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  const unit = a => { const n = norm(a); return a.map(v => v / n); };
+  function make(d) {
+    if (d === 2) return [WORDS[0].target, WORDS[1].target, WORDS[3].target];
+    if (d === 3) return [[...WORDS[0].target, 0.31], [...WORDS[1].target, 0.12], [...WORDS[3].target, -0.22]].map(unit);
+    const r = rng(d * 7 + 1);
+    const mom = Array.from({ length: d }, () => gauss(r));
+    const dad = mom.map(v => v + 0.42 * gauss(r));
+    const car = Array.from({ length: d }, () => gauss(r));
+    return [mom, dad, car].map(a => unit(a).map(v => v * Math.sqrt(d) * 0.045));
+  }
+  function drawCode(cv, a) {
+    const dpr = window.devicePixelRatio || 1, w = cv.clientWidth || 300, h = cv.clientHeight || 44;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+    ctx.fillStyle = css('--bg'); ctx.fillRect(0, 0, w, h);
+    const pos = css('--family'), neg = css('--query');
+    const mx = Math.max(...a.map(Math.abs)) || 1, cw = w / a.length;
+    a.forEach((v, i) => { ctx.globalAlpha = Math.min(1, Math.abs(v) / mx * 1.15); ctx.fillStyle = v >= 0 ? pos : neg; ctx.fillRect(i * cw, 0, Math.max(cw, 1) - (cw > 3 ? 1 : 0), h); });
+    ctx.globalAlpha = 1;
+  }
+  let cur = 2;
+  function render() {
+    for (const b of $('#dimSeg').children) b.classList.toggle('on', +b.dataset.d === cur);
+    const vs = make(cur);
+    vs.forEach((a, i) => {
+      drawCode($('#bc' + i), a);
+      const shown = a.length <= 8 ? vec(a) : '[ ' + a.slice(0, 6).map(v => num(v, 3)).join(', ') + ', … 이하 ' + (a.length - 6) + '개 ]';
+      $('#vec' + i).textContent = shown;
+    });
+    $('#dimN1').textContent = cur + '개의 숫자';
+    $('#dimCos1').textContent = num(cosSim(vs[0], vs[1]));
+    $('#dimCos2').textContent = num(cosSim(vs[0], vs[2]));
+  }
+  for (const b of $('#dimSeg').children) b.onclick = () => { cur = +b.dataset.d; render(); };
+  render();
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 150); });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+  new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+})();
+
+/* ---------- 장면 6: RAG ---------- */
+(() => {
+  const DIMS = ['타임아웃', '오류·장애', '설정 방법', '전문·메시지', '인사·총무', 'DB', '로그'];
+  const DOCS = [
+    { id: 'D1', title: '연계 서버 타임아웃 설정 가이드', v: [0.9, 0.1, 0.9, 0.1, 0, 0, 0] },
+    { id: 'D2', title: '응답 지연·타임아웃 장애 대응 절차', v: [0.9, 0.8, 0.1, 0.1, 0, 0, 0.3] },
+    { id: 'D3', title: '수신 전문 길이 설정 방법', v: [0, 0.1, 0.9, 0.9, 0, 0, 0] },
+    { id: 'D4', title: '전문 파싱 오류 원인과 조치', v: [0, 0.8, 0.1, 0.9, 0, 0, 0.3] },
+    { id: 'D5', title: 'E-4012: 수신 전문 길이 불일치 코드 설명', v: [0.1, 0.4, 0.1, 0.5, 0, 0, 0], kw: ['E-4012'] },
+    { id: 'D6', title: 'DB 커넥션 풀 고갈 장애 대응', v: [0.3, 0.8, 0.1, 0, 0, 0.9, 0.3] },
+    { id: 'D7', title: '연차·휴가 신청 방법', v: [0, 0, 0.3, 0, 1, 0, 0] },
+    { id: 'D8', title: '장애 분석용 로그 위치와 보는 법', v: [0.1, 0.6, 0.1, 0.1, 0, 0.1, 0.9] },
+  ];
+  const QS = [
+    { text: '응답이 늦어서 연결이 끊겨요', v: [0.9, 0.7, 0, 0.1, 0, 0.1, 0.1], kw: [] },
+    { text: '받는 메시지 길이 제한은 어디서 바꿔요?', v: [0, 0.1, 0.8, 0.8, 0, 0, 0], kw: [] },
+    { text: '휴가 내려면 어떻게 해요?', v: [0, 0, 0.2, 0, 1, 0, 0], kw: [] },
+    { text: 'E-4012 에러가 떠요', v: [0.1, 0.9, 0, 0.3, 0, 0, 0.4], kw: ['E-4012'] },
+  ];
+  // 7차원 → 2차원 그림자 (PCA, 거듭제곱법)
+  const unit = a => { const n = norm(a); return a.map(v => v / n); };
+  const all = [...DOCS.map(d => unit(d.v)), ...QS.map(q => unit(q.v))];
+  const mean = DIMS.map((_, j) => all.reduce((s, a) => s + a[j], 0) / all.length);
+  const X = all.map(a => a.map((v, j) => v - mean[j]));
+  const C = DIMS.map((_, i) => DIMS.map((_, j) => X.reduce((s, a) => s + a[i] * a[j], 0)));
+  const mul = (M, v) => M.map(r => dot(r, v));
+  function top(M, avoid) {
+    let v = DIMS.map((_, i) => Math.sin(i + 1.3));
+    for (let it = 0; it < 200; it++) { if (avoid) { const p = dot(v, avoid); v = v.map((x, i) => x - p * avoid[i]); } v = unit(mul(M, v)); }
+    return v;
+  }
+  const e1 = top(C), e2 = top(C, e1);
+  const proj = a => { const c = unit(a).map((v, j) => v - mean[j]); return [dot(c, e1), dot(c, e2)]; };
+  const P = all.map(a => [dot(a.map((v, j) => v - mean[j]), e1), dot(a.map((v, j) => v - mean[j]), e2)]);
+  const sc = 1.0 / Math.max(...P.flat().map(Math.abs));
+  const plane = Plane($('#ragSvg'), { R: 1.25 });
+  let qi = 1;
+  const qbox = $('#ragQuery');
+  QS.forEach((q, i) => { const b = document.createElement('button'); b.className = 'chip'; b.textContent = q.text; b.onclick = () => { qi = i; render(); }; qbox.appendChild(b); });
+  ['#topk', '#hybrid'].forEach(s => $(s).addEventListener('input', render));
+  function render() {
+    [...qbox.children].forEach((b, i) => b.classList.toggle('on', i === qi));
+    const q = QS[qi], k = +$('#topk').value, hy = $('#hybrid').checked;
+    $('#topkV').textContent = k;
+    const rows = DOCS.map(d => {
+      const c = cosSim(q.v, d.v);
+      const hit = hy && q.kw.some(w => (d.kw || []).includes(w) || d.title.includes(w));
+      return { ...d, c, hit, s: c + (hit ? 0.3 : 0) };
+    }).sort((a, b) => b.s - a.s);
+    const chosen = new Set(rows.slice(0, k).map(r => r.id));
+    clear(plane.g.pts); clear(plane.g.rays); clear(plane.g.under); clear(plane.g.over);
+    const qp = proj(q.v).map(v => v * sc);
+    DOCS.forEach(d => {
+      const p = proj(d.v).map(v => v * sc);
+      if (chosen.has(d.id)) { const a = plane.toPx(qp), b = plane.toPx(p); el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], class: 'link' }, plane.g.under); const [x, y] = plane.toPx(p); el('circle', { cx: x, cy: y, r: 12, class: 'halo' }, plane.g.under); }
+      drawPoint(plane, p, d.id, 'dot-doc', { r: 6, labelDy: -11 });
+    });
+    drawPoint(plane, qp, '질문', 'dot-query', { r: 8 });
+    $('#ragVec').innerHTML = `질문 벡터 <span class="mono">${vec(q.v, 1)}</span><br><span class="note">칸 이름: ${DIMS.join(' · ')}</span>`;
+    let h = `<thead><tr><th>순위</th><th>문서</th><th style="text-align:right">코사인</th>${hy ? '<th style="text-align:right">키워드</th><th style="text-align:right">합계</th>' : ''}</tr></thead><tbody>`;
+    rows.forEach((r, i) => {
+      h += `<tr class="${chosen.has(r.id) ? 'hit' : ''}"><td class="num">${i + 1}</td><td>${r.id} ${r.title}${chosen.has(r.id) ? '<span class="tag">LLM에 전달</span>' : ''}</td><td class="num">${num(r.c)}</td>${hy ? `<td class="num">${r.hit ? '+0.30' : '–'}</td><td class="num">${num(r.s)}</td>` : ''}</tr>`;
+    });
+    $('#ragTable').innerHTML = h + '</tbody>';
+    const docs = rows.slice(0, k).map((r, i) => `[참고 문서 ${i + 1}] ${r.id} ${r.title}\n(문서 본문이 여기에 들어갑니다)`).join('\n\n');
+    $('#ragPrompt').textContent = `아래 참고 문서만 근거로 질문에 답하세요.\n문서에 없는 내용이면 모른다고 답하세요.\n\n${docs}\n\n[질문] ${q.text}`;
+    const flow = $('#ragFlow').querySelectorAll('.s'); flow.forEach(s => s.classList.add('on'));
+  }
+  render();
+})();
+
+/* ---------- 장면 7: 퀴즈 ---------- */
+(() => {
+  const Q = [
+    { q: '장면 3의 지도에서 ‘가족’과 코사인 유사도가 가장 높은 단어는?', o: ['자동차', '아빠', '사물'], a: 1, why: '가족과 아빠의 화살표는 거의 같은 쪽을 봅니다.' },
+    { q: '지도 전체를 돌렸을 때 바뀌지 않는 것은?', o: ['각 단어의 좌표값', '단어 사이의 유사도', '모든 숫자'], a: 1, why: '좌표는 전부 바뀌지만 화살표끼리의 각도는 그대로입니다. AI에게 중요한 건 관계입니다.' },
+    { q: '에러코드처럼 글자가 정확히 맞아야 하는 검색에서 임베딩만 쓰면?', o: ['항상 1등으로 찾는다', '뜻이 비슷한 다른 문서에 밀릴 수 있어 키워드 검색과 섞는다', '검색이 아예 안 된다'], a: 1, why: '임베딩은 뜻을 보기 때문에 기호처럼 의미가 약한 글자에는 약합니다. 그래서 하이브리드 검색을 씁니다.' },
+  ];
+  const box = $('#quiz'); let score = 0, answered = 0;
+  Q.forEach(item => {
+    const d = document.createElement('div'); d.className = 'q';
+    d.innerHTML = `<b>${item.q}</b><div class="opts"></div><div class="fb" aria-live="polite"></div>`;
+    const opts = d.querySelector('.opts'), fb = d.querySelector('.fb'); let done = false;
+    item.o.forEach((t, i) => {
+      const b = document.createElement('button'); b.textContent = t;
+      b.onclick = () => {
+        if (done) return; done = true; answered++;
+        if (i === item.a) { score++; b.classList.add('right'); fb.innerHTML = '<span style="color:var(--good);font-weight:600">맞습니다.</span> ' + item.why; }
+        else { b.classList.add('wrong'); opts.children[item.a].classList.add('right'); fb.innerHTML = '<span style="color:var(--bad);font-weight:600">아쉽습니다.</span> ' + item.why; }
+        $('#quizScore').textContent = `${answered}문제 중 ${score}개 정답`;
+      };
+      opts.appendChild(b);
+    });
+    box.appendChild(d);
+  });
+})();
+
+/* ---------- 목차 하이라이트 ---------- */
+(() => {
+  const links = [...document.querySelectorAll('#toc a')];
+  const io = new IntersectionObserver(es => { es.forEach(e => { if (e.isIntersecting) links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id)); }); }, { rootMargin: '-40% 0px -55% 0px' });
+  document.querySelectorAll('section.scene').forEach(s => io.observe(s));
+})();
+})();
+</script>
