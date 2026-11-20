@@ -15,6 +15,7 @@ export default defineConfig({
         ...(slug === 'ai' ? [{ label: '▶ AI 슬라이드 바로 시작', link: '/ai/spatial-sense/' }] : []),
         { autogenerate: { directory: slug } },
       ] })),
+      { label: 'Study 개선 이력', link: 'https://t3rryahn.duckdns.org/releases/study/' },
     ],
     components: { Head: './src/components/Head.astro' },
     customCss: ['./src/styles/custom.css'],
