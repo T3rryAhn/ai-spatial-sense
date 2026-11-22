@@ -2,6 +2,11 @@
 
 2026-11-22 · `claude/study-apple` · 기준 커밋 `4fdd7a8` · 로컬 검증
 
+
+## 운영 반영 (2026-11-22)
+
+2026-11-22 15:40 KST경 사용자 승인 후 커밋 `89eacc8`에서 `sudo bash /var/tmp/study-2.1.0/deploy/deploy_210.sh /var/tmp/study-2.1.0`으로 배포했다. 스크립트는 `Verified ai-spatial-sense:2.1.0`으로 끝났다. 복구 파일은 `/srv/apps/ai-spatial-sense/backups/2.1.0-20261122T064016Z-hJ6hZl`에 있다. 배포 후 `ai-spatial-sense:2.1.0`이 healthy 상태다. https://study.t3rryahn.duckdns.org/ 의 홈, `/ai/spatial-sense/`, `/ai/spatial-sense-guide/`, `/healthz`가 HTTP 200을 반환한다. 홈에는 `service=study&from=%2F` 의견 링크가 있다. 실기기, Safari, 검색 모달의 실제 사용은 아직 확인하지 않았다.
+
 ## 화면과 동작
 
 - 홈의 좌표 평면 그림, 네 분야의 선 아이콘과 시작 버튼은 SVG와 CSS로 만들었다. 시스템 글꼴을 쓰고, 문서·카테고리·장면 목록은 인디고 계열의 같은 탐색 색을 쓴다.
