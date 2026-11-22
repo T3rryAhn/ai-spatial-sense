@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 const root = resolve(process.argv[2] || 'dist');
+const port = Number(process.env.STUDY_CHECK_PORT || 4321);
 const csp = (await readFile('deploy/nginx.conf', 'utf8')).match(/Content-Security-Policy "([^"]+)"/)[1];
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.wasm': 'application/wasm', '.png': 'image/png', '.woff2': 'font/woff2' };
 createServer(async (req, res) => {
@@ -22,4 +23,4 @@ createServer(async (req, res) => {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.end(await readFile(resolve(root, '404.html')).catch(() => 'Not found'));
   }
-}).listen(4321, '127.0.0.1', () => console.log(`Serving ${root} on http://127.0.0.1:4321`));
+}).listen(port, '127.0.0.1', () => console.log(`Serving ${root} on http://127.0.0.1:${port}`));

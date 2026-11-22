@@ -1,12 +1,69 @@
 ---
 import { categories } from '../categories.mjs';
+const symbols: Record<string, string> = {
+  ai: 'M4 6.5 11 4l8.5 5-6.2 6.1L5 17.2l6-13.1m2.3 11L19 20m-14-2.8 14.5-8.2',
+  cs: 'M4 7.5c2.6-.9 4.9-.7 8 1.1 3.1-1.8 5.4-2 8-1.1v11c-2.8-.8-5.1-.3-8 1.1-3-1.4-5.2-1.9-8-1.1zm8 1.1v11M6.5 5.2c2.1-.4 3.8 0 5.5 1.1 1.7-1.1 3.4-1.5 5.5-1.1',
+  network: 'M9 4h6v5H9zm3 5v4m-7 4v-4h14v4M2.5 17h5v4h-5zm14 0h5v4h-5z',
+  os: 'm3 7.7 9-4.5 9 4.5-9 4.5zM3 12l9 4.5 9-4.5M3 16.5l9 4.5 9-4.5',
+};
 ---
-<div class="study-categories">
+<ul class="categories not-content" aria-label="학습 카테고리">
   {categories.map(({ slug, label, description }) => (
-    <a class="study-category" href={`/${slug}/`}>
-      <strong>{label} <span aria-hidden="true">↗</span></strong>
-      <span>{description}</span>
-      <small>{slug === 'ai' ? '인터랙티브 학습 자료' : '준비 중'}</small>
-    </a>
+    <li>
+      <a class={`category ${slug}`} href={`/${slug}/`}>
+        <span class="icon">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+            <path d={symbols[slug] ?? symbols.cs} />
+            {slug === 'ai' && <g fill="currentColor" stroke="none">
+              <circle cx="4" cy="6.5" r="1.65"/><circle cx="11" cy="4" r="1.85"/><circle cx="19.5" cy="9" r="2"/>
+              <circle cx="13.3" cy="15.1" r="1.85"/><circle cx="5" cy="17.2" r="2"/><circle cx="19" cy="20" r="1.65"/>
+            </g>}
+          </svg>
+        </span>
+        <strong>{label}</strong>
+        <span class="arrow" aria-hidden="true">›</span>
+        <span class="desc">{description}</span>
+        <small>{slug === 'ai' ? '인터랙티브 학습 자료' : '준비 중'}</small>
+      </a>
+    </li>
   ))}
-</div>
+</ul>
+
+<style>
+  .categories { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: .85rem; list-style: none; padding: 0; }
+  .categories li { display: flex; min-width: 0; }
+  .category {
+    --ink: #514096;
+    --tint: #eae5fb;
+    display: grid;
+    grid-template-columns: auto minmax(0,1fr) auto;
+    grid-template-rows: auto 1fr auto;
+    align-items: center;
+    gap: .65rem .7rem;
+    width: 100%;
+    padding: 1.125rem;
+    border: 1px solid var(--study-separator);
+    border-radius: 18px;
+    background: var(--study-surface);
+    box-shadow: var(--study-shadow);
+    color: var(--sl-color-white);
+    text-decoration: none;
+  }
+  .category.cs { --ink: #265d76; --tint: #ddedf2; }
+  .category.network { --ink: #236a5e; --tint: #d9eee6; }
+  .category.os { --ink: #90502c; --tint: #fae8da; }
+  .icon { display: grid; place-items: center; width: 2.65rem; height: 2.65rem; border-radius: 12px; background: var(--tint); color: var(--ink); }
+  strong { font-size: 1.0625rem; letter-spacing: -.015em; line-height: 1.3; }
+  .arrow { color: var(--study-secondary); font-size: 1.375rem; line-height: 1; }
+  .desc, small { grid-column: 1/-1; }
+  .desc { align-self: start; font-size: 1rem; line-height: 1.45; color: var(--study-secondary); word-break: keep-all; overflow-wrap: anywhere; }
+  small { font-size: .75rem; font-weight: 600; color: var(--study-secondary); }
+  .ai small { color: var(--sl-color-text-accent); }
+  .category:hover, .category:focus-visible { border-color: var(--sl-color-text-accent); }
+  .category:hover strong { text-decoration: underline; }
+  :global([data-theme='dark']) .icon { background: var(--ink); color: var(--tint); }
+  @media (prefers-reduced-motion: no-preference) {
+    .category { transition: transform 200ms cubic-bezier(.2,.8,.2,1), border-color 200ms; }
+    .category:active { transform: scale(.97); }
+  }
+</style>

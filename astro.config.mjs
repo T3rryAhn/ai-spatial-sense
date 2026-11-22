@@ -17,7 +17,10 @@ export default defineConfig({
       ] })),
       { label: 'Study 개선 이력', link: 'https://t3rryahn.duckdns.org/releases/study/' },
     ],
-    components: { Head: './src/components/Head.astro' },
+    components: {
+      Head: './src/components/Head.astro',
+      Pagination: './src/components/FooterNavigation.astro',
+    },
     customCss: ['./src/styles/custom.css'],
   })],
 });

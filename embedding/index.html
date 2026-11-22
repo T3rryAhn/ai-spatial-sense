@@ -1,6 +1,12 @@
 <title>AI의 지능은 공간감각이다</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+  try {
+    const scheme = localStorage.getItem('starlight-theme');
+    if (scheme === 'light' || scheme === 'dark') document.documentElement.dataset.theme = scheme;
+  } catch { /* 저장소 접근이 제한되면 시스템 테마를 따른다. */ }
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
 <style>
@@ -343,6 +349,69 @@ svg text{font-family:var(--sans)}
   .slots .blk,.token,.mr,.mbr.res span,.mf div{animation:none!important}
   .vg i,.v3 .vwrap,.dust span{animation:none!important}
 }
+/* 독립 슬라이드의 탐색 도구. 장면의 글꼴, 배치와 데이터는 원본을 따른다. */
+.top, .nav, .scene-dialog {
+  --chrome-surface: #fff;
+  --chrome-glass: rgb(255 255 255 / .72);
+  --chrome-ink: #513d98;
+  --chrome-tint: #ece7fb;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+}
+:root[data-theme="dark"] :is(.top,.nav,.scene-dialog) {
+  --chrome-surface: #1c1c1e; --chrome-glass: rgb(30 30 30 / .72); --chrome-ink: #cec4ff; --chrome-tint: #38314e;
+}
+@media (prefers-color-scheme:dark) {
+  :root:not([data-theme="light"]) :is(.top,.nav,.scene-dialog) {
+    --chrome-surface: #1c1c1e; --chrome-glass: rgb(30 30 30 / .72); --chrome-ink: #cec4ff; --chrome-tint: #38314e;
+  }
+}
+.top .brand, .chapters { font-family: var(--sans); }
+.chap .fill { background: var(--chrome-ink); }
+.chap.cur .lab { color: var(--chrome-ink); }
+.study-tools { gap: 4px; }
+.study-tools :is(a,button) {
+  position: relative; top: -10px; min-width: 44px; height: 44px; justify-content: center;
+  padding: 0 12px; border-radius: 12px; font-weight: 600; background: var(--chrome-surface); color: var(--chrome-ink);
+}
+.nav { box-shadow: 0 -1px var(--line); background: var(--chrome-surface); }
+.nav::before { content: ""; position: absolute; inset: 0 -16px; background: inherit; box-shadow: inherit; z-index: -1; }
+.nav .feedback { display: inline-flex; align-items: center; min-height: 44px; color: var(--chrome-ink); font-size: 13px; white-space: nowrap; }
+.nav .btn.next:not(.wait) { background: #5844a5; color: white; border-color: transparent; }
+.scene-dialog { padding: 0 18px 18px; width: min(36rem,calc(100% - 28px)); border-radius: 22px; background: var(--chrome-surface); }
+.scene-dialog header { top: 0; z-index: 1; padding-block: 14px; background: var(--chrome-surface); border-bottom: 1px solid var(--line); }
+.scene-dialog h4 { color: var(--chrome-ink); }
+.scene-dialog ol { border-radius: 16px; overflow: hidden; background: var(--chrome-surface); border: 1px solid var(--line); }
+.scene-dialog li + li { border-top: 1px solid var(--line); }
+.scene-dialog a { min-height: 44px; padding: 11px 13px; border-radius: 0; }
+.scene-dialog a[aria-current="step"] { background: var(--chrome-tint); color: var(--chrome-ink); }
+.scene-dialog a[aria-current="step"]::after { color: inherit; }
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .nav, .scene-dialog {
+    background: var(--chrome-glass); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  }
+}
+@media (prefers-reduced-transparency:reduce) {
+  .nav, .scene-dialog { background: var(--chrome-surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (max-width:860px) {
+  .chapters:not(:empty) { overflow-x: auto; scrollbar-width: none; margin-block: -12px -10px; }
+  .chap { flex: 1 0 44px; min-height: 44px; padding-block: 12px 10px; }
+  .chap:focus-visible { outline-offset: -2px; }
+  .nav .hint { display: none; }
+  .nav .feedback { margin-inline-end: auto; }
+  .scene-dialog { margin: auto 0 0; width: 100%; max-width: 100%; border-radius: 22px 22px 0 0; }
+}
+@media (max-width:24rem) {
+  .nav { gap: 6px; }
+  .nav .btn.next { padding-inline: 14px; white-space: nowrap; }
+}
+@media (prefers-reduced-motion:no-preference) {
+  @view-transition { navigation: auto; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .app *, .scene-dialog * { transition: none !important; }
+  .cta.pulse { animation: none; }
+}
 </style>
 
 <div class="app">
@@ -369,6 +438,7 @@ svg text{font-family:var(--sans)}
   </main>
   <footer class="nav">
     <button class="btn round" id="prev" aria-label="이전">←</button>
+    <a class="feedback" href="https://t3rryahn.duckdns.org/feedback/?service=study&amp;from=%2Fai%2Fspatial-sense%2F">의견 보내기</a>
     <div class="hint" id="hint">→ 키 · 스페이스로 넘기기</div>
     <span class="count" id="count"></span>
     <button class="btn next" id="next">다음 →</button>
@@ -1034,6 +1104,9 @@ function go(i, first) {
     const done = list[0][1] > idx ? 0 : list[list.length - 1][1] < idx ? 1 : (pos + 1) / list.length;
     el.querySelector('.fill').style.width = done * 100 + '%'; el.classList.toggle('cur', c === beat.ch);
   });
+  if (chapters.scrollWidth > chapters.clientWidth) {
+    chapters.querySelector('.cur')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
   $('#count').textContent = `${idx + 1} / ${BEATS.length}`;
   $('#prev').disabled = idx === 0;
   $('#next').hidden = idx === BEATS.length - 1;

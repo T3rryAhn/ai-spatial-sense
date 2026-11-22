@@ -18,7 +18,8 @@ npm run preview
 ```sh
 node scripts/serve-check.mjs dist  # 127.0.0.1:4321, 배포 CSP를 적용하는 검증 서버
 node scripts/check-site.cjs       # 별도 터미널, Playwright + Edge 필요
-docker build -t ai-spatial-sense:2.0.0 .
+node scripts/check-redesign.cjs   # 4개 화면 폭 × 2개 테마, .local/shots-apple/
+docker build -t ai-spatial-sense:2.1.0 .
 ```
 
 Playwright는 사이트 의존성이 아닙니다. 검증용 설치 경로를 `NODE_PATH`에 지정할 수 있습니다. `check-slides.cjs`는 수정 전 파일이 `.artifacts/before/index.html`, 수정 후 파일이 `.artifacts/ai/spatial-sense/index.html`에 있는 서버(`node scripts/serve-check.mjs .artifacts`)와 비교합니다. 스크린샷·측정 결과는 `.artifacts/`에 저장합니다.
@@ -57,13 +58,13 @@ sidebar:
 
 ## 컨테이너와 배포
 
-Dockerfile은 `node:24-alpine`에서 `npm ci`와 Astro 빌드를 수행하고, 기존 digest로 고정한 비권한 nginx 이미지에 `dist/`만 복사합니다. Compose의 read-only, cap_drop, 64MiB, PID·CPU 제한과 localhost 바인딩은 유지합니다. 이미지 태그는 `ai-spatial-sense:2.0.0`입니다.
+Dockerfile은 `node:24-alpine`에서 `npm ci`와 Astro 빌드를 수행하고, 기존 digest로 고정한 비권한 nginx 이미지에 `dist/`만 복사합니다. 저장소의 Compose는 localhost에 바인딩하는 로컬 예시이며 이미지 태그는 `ai-spatial-sense:2.1.0`입니다. VM230 배포 스크립트는 서버의 Compose에서 이미지 태그만 바꿉니다.
 
 `/healthz`는 200 `ok`, 존재하지 않는 URL은 Starlight의 `404.html`과 HTTP 404를 반환하도록 설정했습니다. CSP는 Starlight 인라인 초기화 스크립트, 같은 출처 JS·Pagefind 인덱스, WASM 실행을 허용합니다. `unsafe-eval`은 허용하지 않습니다. Google Fonts 허용은 기존 슬라이드용이며 외부 추적은 없습니다. 프록시가 별도 CSP를 덧붙이면 두 정책이 동시에 적용되므로 검색·테마·메뉴를 다시 확인해야 합니다.
 
 빌드 단계는 기존 HTML 복사보다 시간과 메모리, 이미지 다운로드가 더 필요합니다. 런타임 64MiB 제한은 Node 빌드 단계에는 적용되지 않습니다. 최종 이미지에는 Node와 node_modules가 포함되지 않습니다. 실제 빌드 시간·이미지 크기는 배포 환경에서 측정합니다.
 
-이 변경의 구현·검증 결과와 미검증 항목은 `docs/VERIFICATION-2.0.0.md`에 기록합니다. 검수 후 별도로 배포하며, 자동 push·배포는 수행하지 않습니다.
+검증 명령, VM230 배포 절차와 복구 방법은 [2.1.0 검증 보고서](docs/VERIFICATION-2.1.0.md)에 있습니다.
 
 ## 참고 문서
 
