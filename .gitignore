@@ -2,6 +2,7 @@ dist/
 node_modules/
 .astro/
 .artifacts/
+.local/
 public/ai/spatial-sense/
 src/generated/
 .DS_Store

@@ -2,8 +2,10 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
 
 const source = await readFile(new URL('../embedding/index.html', import.meta.url), 'utf8');
-const split = source.indexOf('<style>');
-if (split < 0) throw new Error('슬라이드 원본의 <style> 경계를 찾지 못했습니다.');
+const styleEnd = source.indexOf('</style>');
+if (styleEnd < 0) throw new Error('슬라이드 원본의 </style> 경계를 찾지 못했습니다.');
+// 브라우저가 첫 화면과 문서 전환을 그리기 전에 슬라이드 스타일을 읽도록 한다.
+const split = styleEnd + '</style>'.length;
 const html = `<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n<meta name="description" content="AI의 지능은 공간감각이다 — 인터랙티브 AI 기초 학습 자료">\n${source.slice(0, split)}</head>\n<body>\n${source.slice(split)}\n</body>\n</html>\n`;
 const output = new URL('../public/ai/spatial-sense/', import.meta.url);
 await mkdir(output, { recursive: true });

@@ -3,6 +3,7 @@ const { chromium } = require('playwright');
 const fs = require('node:fs/promises');
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const origin = `http://127.0.0.1:${process.env.STUDY_CHECK_PORT || 4321}`;
 
 (async () => {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
@@ -46,7 +47,7 @@ const path = require('node:path');
       for (const scene of [1, 10, 20, 30]) {
         const url = phase === 'before' ? '/before/index.html' : '/ai/spatial-sense/';
         // 원본에는 hashchange 리스너가 없으므로 query도 바꿔 반드시 새 문서로 로드합니다.
-        await page.goto(`http://127.0.0.1:4321${url}?scene=${scene}#${scene}`);
+        await page.goto(`${origin}${url}?scene=${scene}#${scene}`);
         await page.waitForTimeout(600);
         const data = await page.evaluate(measure);
         assert.equal(data.overflow, false, `${phase} ${width} #${scene}: horizontal overflow`);
@@ -61,7 +62,7 @@ const path = require('node:path');
     }
   }
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.goto('http://127.0.0.1:4321/ai/spatial-sense/#10');
+  await page.goto(origin + '/ai/spatial-sense/#10');
   await page.locator('#open-scenes').click();
   assert.equal(await page.locator('#scene-dialog').evaluate(el => el.open), true);
   assert.equal(await page.locator('[data-scene]').count(), 50);

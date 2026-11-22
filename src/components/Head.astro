@@ -2,6 +2,9 @@
 import DefaultHead from '@astrojs/starlight/components/Head.astro';
 ---
 <DefaultHead />
+<style is:inline>
+  @media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }
+</style>
 {Astro.url.pathname === '/' && <script is:inline>
   if (/^#[1-9]\d*$/.test(location.hash)) {
     location.replace('/ai/spatial-sense/' + location.hash);

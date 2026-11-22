@@ -3,6 +3,7 @@ dist
 .astro
 .git
 .artifacts
+.local
 archive
 public/ai/spatial-sense
 src/generated
